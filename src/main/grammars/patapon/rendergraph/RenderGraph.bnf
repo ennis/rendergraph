@@ -1,0 +1,158 @@
+{
+  parserClass="patapon.rendergraph.parser.RenderGraphParser"
+  parserUtilClass='patapon.rendergraph.parser.RenderGraphParserUtil'
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Rg"
+  psiImplClassSuffix="Impl"
+  psiPackage="patapon.rendergraph.psi"
+  psiImplPackage="patapon.rendergraph.psi.impl"
+
+  elementTypeHolderClass="patapon.rendergraph.psi.RgElementTypes"
+  elementTypeClass="patapon.rendergraph.psi.RgElementType"
+  tokenTypeClass="patapon.rendergraph.psi.RgTokenType"
+
+  tokens = [
+          LBRACE      =  '{'
+          RBRACE      =  '}'
+          LBRACK      =  '['
+          RBRACK      =  ']'
+          LPAREN      =  '('
+          RPAREN      =  ')'
+          COLON       =  ':'
+          COLONCOLON  =  '::'
+          SEMICOLON   =  ';'
+          COMMA       =  ','
+          EQ          =  '='
+          EXCLEQ      =  '!='
+          EQEQ        =  '=='
+          SHA         =  '#'
+          EXCL        =  '!'
+          PLUSEQ      =  '+='
+          PLUSPLUS    =  '++'
+          PLUS        =  '+'
+          MINUSEQ     =  '-='
+          MINUSMINUS  =  '--'
+          MINUS       =  '-'
+          OREQ        =  '|='
+          ANDAND      =  '&&'
+          ANDEQ       =  '&='
+          AND         =  '&'
+          OR          =  '|'
+          OROR        =  '||'
+          LT          =  '<'
+          LTEQ        =  '<='
+          XOREQ       =  '^='
+          XOR         =  '^'
+          MULEQ       =  '*='
+          MUL         =  '*'
+          DIVEQ       =  '/='
+          DIV         =  '/'
+          REMEQ       =  '%='
+          REM         =  '%'
+          GT          =  '>'
+          GTEQ        =  '>='
+          DOT         =  '.'
+          DOTDOT      =  '..'
+          DOTDOTDOT   =  '...'
+          FAT_ARROW   =  '=>'
+          ARROW       =  '->'
+          Q           =  '?'
+          AT          =  '@'
+          UNDERSCORE  =  '_'
+          DOLLAR      =  '$'
+
+       SPACE='regexp:\s+'
+        comment='regexp://.*'
+        INT_LITERAL='regexp:\d+(\.\d*)?'
+        identifier='regexp:\p{Alpha}\w*'
+        string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
+  ]
+}
+
+//====================================================================
+document ::= module_declaration? imports module_contents
+//Document ::= PrimitiveTopologyItem
+
+initializer ::= FLOAT_LITERAL
+              | INT_LITERAL
+              | UINT_LITERAL
+              | DOUBLE_LITERAL
+
+primitive_type ::= int | float | double
+
+//====================================================================
+// MODULE & IMPORTS
+module_path ::= identifier ('.' identifier)*
+//private moduleRecover ::= !(ImportDirective | item)
+module_declaration ::= module module_path ';' { pin=1 }
+module_contents ::= item*
+imports ::= import_directive*
+private import_recover ::= !(item)
+import_directive ::= import module_path ';' { pin=1  }
+
+//====================================================================
+// ITEMS
+attribute ::= '@' identifier ('(' ')')?
+private attribute_list ::= attribute*
+private item ::= (constant_definition
+                | component_definition
+                | uniform_definition
+                | function_definition)
+
+//====================================================================
+type ::= primitive_type | identifier
+qualifier ::= 'in' | 'out' | 'inout'
+
+//====================================================================
+constant_definition ::= attribute_list const type identifier ('=' initializer)? ';' { pin=2 }
+
+//====================================================================
+uniform_definition ::= attribute_list uniform type identifier ('=' initializer)? ';' { pin=2 }
+
+//====================================================================
+private param_recover ::= !(')' | ';')
+primitive_topology ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=param_recover}
+primitive_topology_item ::= primitive_topology '(' primitive_topology ')' ';' { pin=2 }
+vertex_shader_item ::= 'vertex' '(' identifier ')' ';' { pin=2 }
+fragment_shader_item ::= 'fragment' '(' identifier ')' ';' { pin=2 }
+geometry_shader_item ::= 'geometry' '(' identifier ')' ';' { pin=2 }
+tess_control_shader_item ::= 'tess_control' '(' identifier ')' ';' { pin=2 }
+tess_eval_shader_item ::= 'tess_eval' '(' identifier ')' ';' { pin=2 }
+depth_test_item ::= 'depth_test' '(' bool_literal ')' ';' { pin=2 }
+
+//====================================================================
+private arglist_recover ::= !(')' | ',')
+argument ::= attribute_list qualifier? type identifier { pin=3 recoverWhile=arglist_recover }
+private argument_list ::= argument (',' argument)* /* empty */
+function_definition ::= attribute_list type identifier '(' argument_list? ')' '{' brace_balanced_block '}'
+
+//====================================================================
+private component_item_recover ::= !('}' | const | pass | '@' | identifier | primitive_type)
+private component_item ::= !'}' (
+                        constant_definition
+                      | function_definition
+                      | pass_definition) { pin=1 recoverWhile=component_item_recover }
+
+component_definition ::= attribute_list component identifier '{' component_item* '}'
+
+private pass_item_recover ::= !('}' | const | identifier | pass | '@' | primitive_topology
+                            | 'vertex' | 'fragment' | 'geometry' | 'tess_control' | 'tess_eval' | 'depth_test')
+private pass_item ::= !'}'
+                      ( primitive_topology_item
+                      | vertex_shader_item
+                      | fragment_shader_item
+                      | geometry_shader_item
+                      | tess_control_shader_item
+                      | tess_eval_shader_item
+                      | depth_test_item
+                      | constant_definition
+                      | function_definition
+                      ) { pin=1 recoverWhile=pass_item_recover }
+
+pass_definition ::= attribute_list pass identifier? '{' pass_item* '}'
+
+//====================================================================
+// GLSL code
+brace_balanced_block ::=  ('{' brace_balanced_block '}' | << unpairedToken >>)*
