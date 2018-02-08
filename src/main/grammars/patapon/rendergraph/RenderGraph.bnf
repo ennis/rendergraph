@@ -114,13 +114,13 @@ uniform_definition ::= attribute_list uniform type identifier ('=' initializer)?
 //====================================================================
 private param_recover ::= !(')' | ';')
 primitive_topology ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=param_recover}
-primitive_topology_item ::= primitive_topology '(' primitive_topology ')' ';' { pin=2 }
-vertex_shader_item ::= 'vertex' '(' identifier ')' ';' { pin=2 }
-fragment_shader_item ::= 'fragment' '(' identifier ')' ';' { pin=2 }
-geometry_shader_item ::= 'geometry' '(' identifier ')' ';' { pin=2 }
-tess_control_shader_item ::= 'tess_control' '(' identifier ')' ';' { pin=2 }
-tess_eval_shader_item ::= 'tess_eval' '(' identifier ')' ';' { pin=2 }
-depth_test_item ::= 'depth_test' '(' bool_literal ')' ';' { pin=2 }
+primitive_topology_item ::= 'primitive_topology' '(' primitive_topology ')' ';' { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+vertex_shader_item ::= 'vertex' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+fragment_shader_item ::= 'fragment' '(' identifier ')' ';' { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+geometry_shader_item ::= 'geometry' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+tess_control_shader_item ::= 'tess_control' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+tess_eval_shader_item ::= 'tess_eval' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+depth_test_item ::= 'depth_test' '(' bool_literal ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
 
 //====================================================================
 private arglist_recover ::= !(')' | ',')
