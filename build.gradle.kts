@@ -74,6 +74,13 @@ repositories {
 
 dependencies {
     compile(kotlinModule("stdlib-jdk8", kotlin_version))
+    compile("de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2")
+    compile("no.tornado:tornadofx:1.7.14")
+    compile("org.controlsfx:controlsfx:8.40.14")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:0.21.2")
+    compile("io.reactivex.rxjava2:rxjavafx:2.2.2")
+    compile("io.reactivex.rxjava2:rxkotlin:2.2.0")
+    compile("com.github.thomasnield:rxkotlinfx:2.2.2")
     testCompile("junit", "junit", "4.12")
 }
 

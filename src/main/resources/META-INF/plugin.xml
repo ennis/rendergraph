@@ -19,6 +19,8 @@
         <lang.parserDefinition language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphParserDefinition"/>
         <lang.syntaxHighlighterFactory language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphSyntaxHighlighterFactory"/>
         <annotator language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphHighlightingAnnotator"/>
+        <toolWindow id="Sample Tool Window" anchor="bottom" factoryClass="patapon.rendergraph.visual.GraphViewToolWindowFactory"/>
+
         <!-- Add your extensions here -->
     </extensions>
 

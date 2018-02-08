@@ -135,7 +135,10 @@ private component_item ::= !'}' (
                       | function_definition
                       | pass_definition) { pin=1 recoverWhile=component_item_recover }
 
-component_definition ::= attribute_list component identifier '{' component_item* '}'
+component_base ::= identifier
+private component_bases ::= component_base (',' component_base)*
+private component_extends ::= ':' component_bases { pin=1 }
+component_definition ::= attribute_list component identifier component_extends? '{' component_item* '}'
 
 private pass_item_recover ::= !('}' | const | identifier | pass | '@' | primitive_topology
                             | 'vertex' | 'fragment' | 'geometry' | 'tess_control' | 'tess_eval' | 'depth_test')
