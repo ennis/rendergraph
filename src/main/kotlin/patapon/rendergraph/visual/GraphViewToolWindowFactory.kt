@@ -90,6 +90,7 @@ class GraphViewToolWindowFactory : ToolWindowFactory {
         fxpanel.scene = Scene(GraphViewToolRoot().root)
 
         // Init TornadoFX after initializing JavaFX with a JFXPanel.
+        Platform.setImplicitExit(false)
         Platform.runLater {
             val stage = Stage()
             val app = GraphViewToolApplication()
