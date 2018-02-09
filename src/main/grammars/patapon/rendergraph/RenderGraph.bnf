@@ -86,11 +86,11 @@ primitive_type ::= int | float | double
 // MODULE & IMPORTS
 module_path ::= identifier ('.' identifier)*
 //private moduleRecover ::= !(ImportDirective | item)
-module_declaration ::= module module_path ';' { pin=1 }
+module_declaration ::= module module_path << itemTerminator >> { pin=1 }
 module_contents ::= item*
 imports ::= import_directive*
 private import_recover ::= !(item)
-import_directive ::= import module_path ';' { pin=1  }
+import_directive ::= import module_path << itemTerminator >> { pin=1  }
 
 //====================================================================
 // ITEMS
@@ -106,27 +106,28 @@ type ::= primitive_type | identifier
 qualifier ::= 'in' | 'out' | 'inout'
 
 //====================================================================
-constant_definition ::= attribute_list const type identifier ('=' initializer)? ';' { pin=2 }
+constant_definition ::=  attribute_list const identifier (':' type)? ('=' initializer)? << itemTerminator >> { pin=2 }
 
 //====================================================================
-uniform_definition ::= attribute_list uniform type identifier ('=' initializer)? ';' { pin=2 }
+uniform_definition ::= attribute_list uniform identifier (':' type)? ('=' initializer)? << itemTerminator >> { pin=2 }
 
 //====================================================================
-private param_recover ::= !(')' | ';')
+private param_recover ::= !(')' | << itemTerminator >>)
 primitive_topology ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=param_recover}
-primitive_topology_item ::= 'primitive_topology' '(' primitive_topology ')' ';' { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-vertex_shader_item ::= 'vertex' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-fragment_shader_item ::= 'fragment' '(' identifier ')' ';' { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-geometry_shader_item ::= 'geometry' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-tess_control_shader_item ::= 'tess_control' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-tess_eval_shader_item ::= 'tess_eval' '(' identifier ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
-depth_test_item ::= 'depth_test' '(' bool_literal ')' ';'  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+primitive_topology_item ::= 'primitive_topology' '(' primitive_topology ')' << itemTerminator >> { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+vertex_shader_item ::= 'vertex' '(' identifier ')' << itemTerminator >>  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+fragment_shader_item ::= 'fragment' '(' identifier ')' << itemTerminator >> { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+geometry_shader_item ::= 'geometry' '(' identifier ')' << itemTerminator >>  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+tess_control_shader_item ::= 'tess_control' '(' identifier ')' << itemTerminator >>  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+tess_eval_shader_item ::= 'tess_eval' '(' identifier ')' << itemTerminator >>  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
+depth_test_item ::= 'depth_test' '(' bool_literal ')' << itemTerminator >>  { pin=2 implements="patapon.rendergraph.psi.ext.RgRenderPassItem" }
 
 //====================================================================
 private arglist_recover ::= !(')' | ',')
-argument ::= attribute_list qualifier? type identifier { pin=3 recoverWhile=arglist_recover }
+argument ::= attribute_list qualifier? identifier ':' type { pin=3 recoverWhile=arglist_recover }
 private argument_list ::= argument (',' argument)* /* empty */
-function_definition ::= attribute_list type identifier '(' argument_list? ')' '{' brace_balanced_block '}'
+return_type ::= ':' type
+function_definition ::= attribute_list fun identifier '(' argument_list? ')' (':' type) (('{' brace_balanced_block '}') | << itemTerminator >>)
 
 //====================================================================
 private component_item_recover ::= !('}' | const | pass | '@' | identifier | primitive_type)
@@ -137,9 +138,9 @@ private component_item ::= !'}' (
 
 component_base ::= identifier
 private component_bases ::= component_base (',' component_base)*
-private component_extends ::= ':' component_bases { pin=1 }
-component_definition ::= attribute_list component identifier component_extends? '{' component_item* '}'
+component_definition ::= attribute_list component identifier (':' component_bases)? '{' component_item* '}'
 
+//====================================================================
 private pass_item_recover ::= !('}' | const | identifier | pass | '@' | primitive_topology
                             | 'vertex' | 'fragment' | 'geometry' | 'tess_control' | 'tess_eval' | 'depth_test')
 private pass_item ::= !'}'

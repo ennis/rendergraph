@@ -11,7 +11,7 @@ import patapon.rendergraph.psi.*
 class RenderGraphParserDefinition : ParserDefinition {
 
     companion object {
-        val WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE)
+        val WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE, RgTokenType.EOL)
         val COMMENTS = TokenSet.create(RgTokenType.BLOCK_COMMENT, RgTokenType.EOL_COMMENT)
         val FILE = IFileElementType(RenderGraphLanguage.INSTANCE)
     }

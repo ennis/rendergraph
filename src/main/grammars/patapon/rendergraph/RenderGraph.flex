@@ -82,6 +82,8 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     component                               {return COMPONENT;}
     module                                  {return MODULE;}
     import                                  {return IMPORT;}
+    fun                                     {return FUN;}
+    val                                     {return FUN;}
     // GLSL types
     float                                   {return FLOAT; }
     double                                  {return DOUBLE; }
@@ -138,8 +140,8 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     {INT_LITERAL}                           {return INT_LITERAL; }
     {FLOAT_LITERAL}{DOUBLE_SUFFIX}          {return DOUBLE_LITERAL; }
     {FLOAT_LITERAL}{FLOAT_SUFFIX}?          {return FLOAT_LITERAL; }
-
-    {WHITE_SPACE}                           { return WHITE_SPACE; }
+    {LINE_WS}                               {return WHITE_SPACE; }
+    {EOL_WS}                                {return EOL;}
 }
 
 <IN_BLOCK_COMMENT> {

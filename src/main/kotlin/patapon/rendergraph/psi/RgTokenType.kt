@@ -12,6 +12,7 @@ class RgTokenType(debugName: String): IElementType(debugName, RenderGraphLanguag
     companion object {
         @JvmField val BLOCK_COMMENT = RgTokenType("<BLOCK_COMMENT>")
         @JvmField val EOL_COMMENT = RgTokenType("<EOL_COMMENT>")
+        @JvmField val EOL = RgTokenType("EOL")
     }
 }
 
