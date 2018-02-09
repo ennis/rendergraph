@@ -15,4 +15,3 @@ component Hello {
 void func(int j) {
 
 }
-

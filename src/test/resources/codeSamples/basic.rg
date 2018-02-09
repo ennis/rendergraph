@@ -1,0 +1,6 @@
+module M;
+
+component C
+{
+}
+
