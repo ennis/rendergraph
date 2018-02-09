@@ -89,6 +89,7 @@ class GraphViewToolWindowFactory : ToolWindowFactory {
             val stage = Stage()
             val app = GraphViewToolApplication()
             app.start(stage)
+            FX.applyStylesheetsTo(fxpanel.scene)
         }
     }
 
