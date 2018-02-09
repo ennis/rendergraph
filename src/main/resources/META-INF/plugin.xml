@@ -13,6 +13,13 @@
     <!-- uncomment to enable plugin in all products
     <depends>com.intellij.modules.lang</depends>
     -->
+    <project-components>
+        <component>
+            <implementation-class>patapon.rendergraph.RenderGraphProjectComponent</implementation-class>
+            <option name="workspace" value="true"/>
+        </component>
+    </project-components>
+
 
     <extensions defaultExtensionNs="com.intellij">
         <fileTypeFactory implementation="patapon.rendergraph.RenderGraphFileTypeFactory"/>

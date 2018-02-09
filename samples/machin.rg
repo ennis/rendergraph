@@ -9,4 +9,3 @@ component ImageFilterPass {
     @Attrib2 const stuff2 = 50
 
 }
-

@@ -1,5 +1,6 @@
 package patapon.rendergraph.visual
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -78,6 +79,10 @@ class GraphViewToolApplication : Application() {
 }
 
 class GraphViewToolWindowFactory : ToolWindowFactory {
+    companion object {
+        val LOG = Logger.getInstance(GraphViewToolWindowFactory::class.java)
+    }
+
     val fxpanel = JFXPanel()
     lateinit var toolWin: ToolWindow
 
@@ -85,14 +90,17 @@ class GraphViewToolWindowFactory : ToolWindowFactory {
         fxpanel.scene = Scene(GraphViewToolRoot().root)
 
         // Init TornadoFX after initializing JavaFX with a JFXPanel.
+        Platform.setImplicitExit(false)
         Platform.runLater {
             val stage = Stage()
             val app = GraphViewToolApplication()
             app.start(stage)
+            FX.applyStylesheetsTo(fxpanel.scene)
         }
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        LOG.info("GraphViewToolWindowFactory.createToolWindowContent")
         initFx()
         toolWin = toolWindow
         val contentFactory = ContentFactory.SERVICE.getInstance()
