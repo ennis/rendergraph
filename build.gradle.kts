@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.intellij.tasks.PublishTask
-//import de.undercouch.gradle.tasks.download.Download
+import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.grammarkit.GrammarKitPluginExtension
@@ -10,9 +10,15 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.gradle.api.JavaVersion.VERSION_1_8
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.tasks.Jar
+import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.intellij.tasks.RunIdeTask
+import org.jetbrains.intellij.IntelliJPlugin
+import org.jetbrains.intellij.IntelliJPluginExtension
+import org.jetbrains.intellij.jbre.JbreResolver
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.concurrent.thread
 
 buildscript {
@@ -23,53 +29,64 @@ buildscript {
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
         maven { setUrl( "https://plugins.gradle.org/m2/") }
-        maven {
-            setUrl("http://dl.bintray.com/jetbrains/intellij-plugin-service")
-        }
+        maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
+        maven { setUrl("http://dl.bintray.com/jetbrains/intellij-plugin-service") }
     }
     dependencies {
         classpath(kotlinModule("gradle-plugin", kotlin_version))
         classpath("com.github.hurricup:gradle-grammar-kit-plugin:2017.1.1")
-        classpath("gradle.plugin.org.jetbrains:gradle-intellij-plugin:0.1.10")
+        classpath("org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.3.0-SNAPSHOT")
     }
-}
-
-plugins {
-    idea
-    id("org.jetbrains.intellij") version "0.2.17"
 }
 
 group = "patapon"
 version = "1.0-SNAPSHOT"
 
+plugins {
+    idea
+    java
+    id("de.undercouch.download") version "3.2.0"
+    //id("org.jetbrains.intellij")
+}
+
 apply {
     plugin("idea")
-    plugin("java")
+    //plugin("java")
     plugin("kotlin")
     plugin("org.jetbrains.grammarkit")
     plugin("org.jetbrains.intellij")
 }
 
-intellij {
-    version = "IC-2017.3"
+
+val kotlin_version: String by extra
+val sandboxDir = project.rootDir.canonicalPath + "/.sandbox"
+
+configure<IntelliJPluginExtension> {
+    version = "IC-2017.3.4"
     //downloadSources = !CI
     updateSinceUntilBuild = false
     instrumentCode = false
     //ideaDependencyCachePath = file("deps").absolutePath
     pluginName = "RenderGraph"
+    sandboxDirectory = sandboxDir
 }
 
-val kotlin_version: String by extra
 
-allprojects {
-    java.sourceSets {
-        getByName("main").java.srcDirs("src/generated/java")
+the<JavaPluginConvention>().sourceSets {
+    "main" {
+        java {
+            srcDirs("src/generated/java")
+        }
     }
-
 }
 
 repositories {
     mavenCentral()
+}
+
+allprojects {
+    dependencies {
+    }
 }
 
 dependencies {
@@ -92,18 +109,67 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+fun platform(): String {
+    val current = OperatingSystem.current()
+    if (current.isWindows()) return "windows"
+    if (current.isMacOsX()) return "osx"
+    return "linux"
+}
+
+fun arch(): String {
+    val arch = System.getProperty("os.arch")
+    return if ("x86" == arch) { "x86" } else { "x64" }
+}
+
+fun findJavaExecutable(javaHome: File): String? {
+    val os = OperatingSystem.current()
+    val suffix = if (os.isMacOsX) {
+        "jdk/Contents/Home/jre/bin/java"
+    } else if (os.isWindows) {
+        "jre/bin/java.exe"
+    } else {
+        "jre/bin/java"
+    }
+    val j = File(javaHome,suffix)
+    return  if (j.exists()) {j.absolutePath } else {null}
+}
+
+tasks.withType<RunIdeTask> {
+    setJbreVersion("jbrex8u152b1136.11")
+    //val jbre = JbreResolver(project).resolve("jbrex8u152b1136.11")
+    val cacheDirectoryPath = Paths.get(project.gradle.gradleUserHomeDir.absolutePath, "caches/modules-2/files-2.1/com.jetbrains/jbre").toString()
+
+    val artifactName = "${jbreVersion}_${platform()}_${arch()}"
+    println("artifactName: ${artifactName}")
+    val javaDir = File(cacheDirectoryPath, artifactName)
+    var javaExec: String? = null
+    if (javaDir.exists()) {
+        if (javaDir.isDirectory()) {
+            println("javadir: ${javaDir}")
+            javaExec = findJavaExecutable(javaDir)
+            println("javaexec: ${javaExec}")
+        }
+        javaDir.delete()
+    }
+
+    if (javaExec != null) {
+        executable = javaExec
+    }
+    // (findProperty("intellijJre") as? String)?.let(this::setExecutable)
+}
+
 val generateLexer = task<GenerateLexer>("generateLexer") {
-    source = "src/main/grammars/patapon/rendergraph/RenderGraph.flex"
-    targetDir = "src/generated/java/patapon/rendergraph"
+    source = "src/main/grammars/RenderGraph.flex"
+    targetDir = "src/generated/java/patapon/rendergraph/lang/lexer"
     targetClass = "RenderGraphLexer"
     purgeOldFiles = true
 }
 
 val generateParser = task<GenerateParser>("generateParser") {
-    source = "src/main/grammars/patapon/rendergraph/RenderGraph.bnf"
+    source = "src/main/grammars/RenderGraph.bnf"
     targetRoot = "src/generated/java"
-    pathToParser = "/patapon/rendergraph/parser/RenderGraphParser.java"
-    pathToPsiRoot = "/patapon/rendergraph/psi"
+    pathToParser = "/patapon/rendergraph/lang/parser/RenderGraphParser.java"
+    pathToPsiRoot = "/patapon/rendergraph/lang/psi"
     purgeOldFiles = true
 }
 

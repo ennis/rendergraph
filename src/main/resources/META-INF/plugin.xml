@@ -13,20 +13,13 @@
     <!-- uncomment to enable plugin in all products
     <depends>com.intellij.modules.lang</depends>
     -->
-    <project-components>
-        <component>
-            <implementation-class>patapon.rendergraph.RenderGraphProjectComponent</implementation-class>
-            <option name="workspace" value="true"/>
-        </component>
-    </project-components>
-
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileTypeFactory implementation="patapon.rendergraph.RenderGraphFileTypeFactory"/>
-        <lang.parserDefinition language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphParserDefinition"/>
-        <lang.syntaxHighlighterFactory language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphSyntaxHighlighterFactory"/>
-        <annotator language="RenderGraph" implementationClass="patapon.rendergraph.RenderGraphHighlightingAnnotator"/>
-        <toolWindow id="Sample Tool Window" anchor="bottom" factoryClass="patapon.rendergraph.visual.GraphViewToolWindowFactory"/>
+        <fileTypeFactory implementation="patapon.rendergraph.lang.RenderGraphFileTypeFactory"/>
+        <lang.parserDefinition language="RenderGraph" implementationClass="patapon.rendergraph.lang.parser.RenderGraphParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="RenderGraph" implementationClass="patapon.rendergraph.ide.highlight.RenderGraphSyntaxHighlighterFactory"/>
+        <annotator language="RenderGraph" implementationClass="patapon.rendergraph.ide.annotators.RenderGraphHighlightingAnnotator"/>
+        <!--<toolWindow id="Sample Tool Window" anchor="bottom" factoryClass="patapon.rendergraph.ide.visual.GraphViewToolWindowFactory"/>-->
 
         <!-- Add your extensions here -->
     </extensions>

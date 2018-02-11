@@ -1,0 +1,198 @@
+{
+  parserClass="patapon.rendergraph.lang.parser.RenderGraphParser"
+  parserUtilClass='patapon.rendergraph.lang.parser.RenderGraphParserUtil'
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Rg"
+  psiImplClassSuffix="Impl"
+  psiPackage="patapon.rendergraph.lang.psi"
+  psiImplPackage="patapon.rendergraph.lang.psi.impl"
+
+  elementTypeHolderClass="patapon.rendergraph.lang.psi.RgElementTypes"
+  elementTypeClass="patapon.rendergraph.lang.psi.RgElementType"
+  tokenTypeClass="patapon.rendergraph.lang.psi.RgTokenType"
+
+  tokens = [
+          LBRACE      =  '{'
+          RBRACE      =  '}'
+          LBRACK      =  '['
+          RBRACK      =  ']'
+          LPAREN      =  '('
+          RPAREN      =  ')'
+          COLON       =  ':'
+          COLONCOLON  =  '::'
+          SEMICOLON   =  ';'
+          COMMA       =  ','
+          EQ          =  '='
+          EXCLEQ      =  '!='
+          EQEQ        =  '=='
+          SHA         =  '#'
+          EXCL        =  '!'
+          PLUSEQ      =  '+='
+          PLUSPLUS    =  '++'
+          PLUS        =  '+'
+          MINUSEQ     =  '-='
+          MINUSMINUS  =  '--'
+          MINUS       =  '-'
+          OREQ        =  '|='
+          ANDAND      =  '&&'
+          ANDEQ       =  '&='
+          AND         =  '&'
+          OR          =  '|'
+          OROR        =  '||'
+          LT          =  '<'
+          LTEQ        =  '<='
+          XOREQ       =  '^='
+          XOR         =  '^'
+          MULEQ       =  '*='
+          MUL         =  '*'
+          DIVEQ       =  '/='
+          DIV         =  '/'
+          REMEQ       =  '%='
+          REM         =  '%'
+          GT          =  '>'
+          GTEQ        =  '>='
+          DOT         =  '.'
+          DOTDOT      =  '..'
+          DOTDOTDOT   =  '...'
+          FAT_ARROW   =  '=>'
+          ARROW       =  '->'
+          Q           =  '?'
+          AT          =  '@'
+          UNDERSCORE  =  '_'
+          DOLLAR      =  '$'
+          SYNTHETIC_SEMICOLON = 'SYNTHETIC_SEMICOLON'
+          //EOL         =  '<NL>'
+          COMPONENT_KW = 'component'
+          PASS_KW      = 'pass'
+          IMPORT_KW    = 'import'
+          MODULE_KW    = 'module'
+          UNIFORM_KW   = 'uniform'
+
+        EOL='regexp:\n'
+        SPACE='regexp: +'
+        comment='regexp://.*'
+        INT_LITERAL='regexp:\d+(\.\d*)?'
+        identifier='regexp:\p{Alpha}\w*'
+        string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
+  ]
+}
+
+
+//====================================================================
+Document ::= Module? Imports ModuleContents
+
+//Document ::= PrimitiveTopologyItem
+private Semi ::= ';'
+
+Initializer ::= FLOAT_LITERAL
+              | INT_LITERAL
+              | UINT_LITERAL
+              | DOUBLE_LITERAL
+
+PrimitiveType ::= int | float | double
+
+//====================================================================
+// MODULE & IMPORTS
+//private moduleRecover ::= !(ImportDirective | item)
+Module ::= MODULE_KW PathImpl Semi { pin=1 }
+ModuleContents ::= Item*
+Imports ::= Import*
+private ImportRecover ::= !(Item)
+Import ::= IMPORT_KW PathImpl Semi { pin=1  }
+
+//====================================================================
+Attribute ::= '@' PathImpl ('(' ')')?
+private AttributeList ::= Attribute*
+
+
+//====================================================================
+// ITEMS
+private Item ::= (Constant
+                | Component
+                | Uniform
+                | Function)
+
+//====================================================================
+// PATHS
+//fake Path ::= (Path '.' )? identifier
+Path ::= identifier {
+    mixin = "patapon.rendergraph.lang.psi.impl.RgPathImplMixin"
+}
+
+left PathSegment ::= '.' identifier { elementType ="Path"}
+PathImpl ::= Path PathSegment* {
+    elementType ="Path"
+}
+
+//====================================================================
+Type ::= PrimitiveType | identifier
+Qualifier ::= 'in' | 'out' | 'inout'
+
+//====================================================================
+Constant ::=  AttributeList const val identifier (':' Type)? ('=' Initializer)? Semi { pin=2 }
+
+//====================================================================
+Uniform ::= AttributeList UNIFORM_KW val identifier (':' Type)? ('=' Initializer)? Semi { pin=2 }
+
+//====================================================================
+private ParamRecover ::= !(')' | Semi)
+PrimitiveTopology ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=ParamRecover}
+PrimitiveTopologyItem ::= 'primitive_topology' '(' PrimitiveTopology ')' Semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+VertexShaderItem ::= 'vertex' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+FragmentShaderItem ::= 'fragment' '(' PathImpl ')' Semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+GeometryShaderItem ::= 'geometry' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+TessControlShaderItem ::= 'tess_control' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+TessEvalShaderItem ::= 'tess_eval' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+DepthTestItem ::= 'depth_test' '(' bool_literal ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+
+//====================================================================
+private ArglistRecover ::= !(')' | ',')
+
+Argument ::= AttributeList Qualifier? identifier ':' Type {
+    pin=3
+    recoverWhile=ArglistRecover
+}
+
+private ArgumentList ::= Argument (',' Argument)* /* empty */
+//ReturnType ::= ':' Type
+Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type) (('{' BraceBalancedBlock '}') | Semi)
+
+//====================================================================
+private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | PrimitiveType)
+private ComponentItem ::= !'}' (
+                        Constant
+                      | Function
+                      | Pass) { pin=1 recoverWhile=ComponentItemRecover }
+
+ComponentBase ::= PathImpl
+private ComponentBases ::= ComponentBase (',' ComponentBase)*
+
+Component ::= AttributeList COMPONENT_KW identifier (':' ComponentBases)? '{' ComponentItem* '}' {
+    implements = [ "com.intellij.psi.PsiNameIdentifierOwner" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgComponentImplMixin"
+    stubClass = "patapon.rendergraph.lang.stubs.RgComponentStub"
+    elementTypeFactory = "patapon.rendergraph.lang.stubs.StubImplementationsKt.factory"
+}
+
+//====================================================================
+private PassItemRecover ::= !('}' | const | identifier | PASS_KW | '@' | PrimitiveTopology
+                            | 'vertex' | 'fragment' | 'geometry' | 'tess_control' | 'tess_eval' | 'depth_test')
+private PassItem ::= !'}'
+                      ( PrimitiveTopologyItem
+                      | VertexShaderItem
+                      | FragmentShaderItem
+                      | GeometryShaderItem
+                      | TessControlShaderItem
+                      | TessEvalShaderItem
+                      | DepthTestItem
+                      | Constant
+                      | Function
+                      ) { pin=1 recoverWhile=PassItemRecover }
+
+Pass ::= AttributeList PASS_KW identifier? '{' PassItem* '}'
+
+//====================================================================
+// GLSL code
+BraceBalancedBlock ::=  ('{' BraceBalancedBlock '}' | << unpairedToken >>)*
