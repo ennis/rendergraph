@@ -157,7 +157,7 @@ Argument ::= AttributeList Qualifier? identifier ':' Type {
 
 private ArgumentList ::= Argument (',' Argument)* /* empty */
 //ReturnType ::= ':' Type
-Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type) (('{' BraceBalancedBlock '}') | Semi)
+Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type)? (('{' BraceBalancedBlock '}') | Semi)
 
 //====================================================================
 private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | PrimitiveType)
