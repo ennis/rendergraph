@@ -127,7 +127,7 @@ PathImpl ::= Path PathSegment* {
 }
 
 //====================================================================
-Type ::= PrimitiveType | identifier
+Type ::= PrimitiveType | Path
 Qualifier ::= 'in' | 'out' | 'inout'
 
 //====================================================================
@@ -157,10 +157,10 @@ Argument ::= AttributeList Qualifier? identifier ':' Type {
 
 private ArgumentList ::= Argument (',' Argument)* /* empty */
 //ReturnType ::= ':' Type
-Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type)? (('{' BraceBalancedBlock '}') | Semi)
+Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type)? (FunctionBody | Semi)
 
 //====================================================================
-private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | PrimitiveType)
+private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun | PrimitiveType)
 private ComponentItem ::= !'}' (
                         Constant
                       | Function
@@ -194,5 +194,18 @@ private PassItem ::= !'}'
 Pass ::= AttributeList PASS_KW identifier? '{' PassItem* '}'
 
 //====================================================================
-// GLSL code
+// code
 BraceBalancedBlock ::=  ('{' BraceBalancedBlock '}' | << unpairedToken >>)*
+FunctionBody ::= Block | '=' Expression Semi
+Block ::= '{' Statement* '}'
+
+//====================================================================
+// statements
+private Statement ::= EmptyStatement | ReturnStatement
+
+EmptyStatement ::= Semi
+
+ReturnStatement ::= return Expression Semi
+
+Expression ::= identifier
+

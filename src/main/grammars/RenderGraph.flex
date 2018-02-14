@@ -87,6 +87,7 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     val                                     {return VAL;}
     const                                   {return CONST;}
     uniform                                 {return UNIFORM_KW;}
+    return                                  {return RETURN;}
     // GLSL types
     float                                   {return FLOAT; }
     double                                  {return DOUBLE; }

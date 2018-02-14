@@ -4,6 +4,7 @@
     * lang: core language functionality, IDE-independent
         * parser: parser implementation
         * psi: PSI structure
+        * resolve: name resolution utilities and reference classes
         * sema: semantic checks and annotators
     * ide: everything IDE-related
         * visual: structure graph view (on hold)
@@ -30,3 +31,18 @@ Rg*Impl (generated)
     (interface tree) -> Rg* (node interface) -> RgNamedElement (currently omitted) -> PsiNameIdentifierOwner
                                              -> StubBasedPsiElement<StubT(specified in grammar)>
 ```
+
+* Context/Semantic checking
+    * Symbol resolution (first at the item level, then in functions)
+        * Add all symbols in scope (Scope classes: GlobalScope, ComponentScope, FunctionScope)
+            * map name -> declaration PSI (inherits from RgDeclaration/RgNamedElement)
+        * When entering a scope, push it on the ScopeStack
+            * symbol resolution is done in the ScopeStack
+        * Symbol resolution: walk the scope stack, starting from the bottom
+            * Can filter out some kinds of declarations
+        * Verify that the declaration kind is expected
+        * Cache the resolution result in the reference
+    * Resolver: PSI -> Descriptor tree
+        * All references are resolved in the descriptor tree
+
+* Code generation

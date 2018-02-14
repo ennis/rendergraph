@@ -8,7 +8,7 @@ import brdf;
 // One input: (vec3 position)
 
 fun vertex_shader(
-    @Buffer(0) position: vec3): vec4
+    @Buffer position: vec3): vec4
 {
 
 }
