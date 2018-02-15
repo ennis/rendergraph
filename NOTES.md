@@ -34,7 +34,7 @@ Rg*Impl (generated)
 
 * Context/Semantic checking
     * Symbol resolution (first at the item level, then in functions)
-        * Add all symbols in scope (Scope classes: GlobalScope, ComponentScope, FunctionScope)
+        * Add all symbols in scope (Scope classes: PackageScope, ModuleScope, ComponentScope, FunctionScope)
             * map name -> declaration PSI (inherits from RgDeclaration/RgNamedElement)
         * When entering a scope, push it on the ScopeStack
             * symbol resolution is done in the ScopeStack
@@ -44,5 +44,16 @@ Rg*Impl (generated)
         * Cache the resolution result in the reference
     * Resolver: PSI -> Descriptor tree
         * All references are resolved in the descriptor tree
+    * 1. Create a `Compiler` instance
+    * 2. Build the set of source files to compile (either only one or a directory)
+    * 3. For each source file
+        * Parse source file to PSI (or get PSI from some cache)
+        * Generate declaration nodes (GenerateIRPass)
+        * Generate statement nodes
+    * 4. Merge declarations
+    * 5. Name resolution: for each file (ResolutionPass)
+        * Go through every reference and resolve (set pointer to declaration node)
+    * 6. Type checking: for each file, for each expression (TypeCheckingPass)
+        * Typecheck
 
 * Code generation
