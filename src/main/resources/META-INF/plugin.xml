@@ -27,5 +27,6 @@
 
     <actions>
         <!-- Add your actions here -->
+        <action id="RenderGraphCompiler.Compile" class="patapon.rendergraph.ide.actions.CompileAction" text="Compile RenderGraph" description="Compile RenderGraph"/>
     </actions>
 </idea-plugin>

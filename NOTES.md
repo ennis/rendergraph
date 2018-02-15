@@ -48,12 +48,12 @@ Rg*Impl (generated)
     * 2. Build the set of source files to compile (either only one or a directory)
     * 3. For each source file
         * Parse source file to PSI (or get PSI from some cache)
-        * Generate declaration nodes (GenerateIRPass)
+        * Generate declaration nodes (`GenerateIRPass`)
         * Generate statement nodes
     * 4. Merge declarations
-    * 5. Name resolution: for each file (ResolutionPass)
+    * 5. Name resolution: for each file (`ResolutionPass`)
         * Go through every reference and resolve (set pointer to declaration node)
-    * 6. Type checking: for each file, for each expression (TypeCheckingPass)
+    * 6. Type checking: for each file, for each expression (`TypeCheckingPass`)
         * Typecheck
 
 * Code generation
