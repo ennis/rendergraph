@@ -1,0 +1,77 @@
+
+
+
+Module(env) :=
+	// forward reference set
+	env2 <- env + Declarations# 
+	
+	Declarations := 
+		  Component (env2)
+		| Function (env2)
+
+Component (env) :=
+
+	Name := identifier 
+		// PASS 1 CHECK
+		{ /* first pass: check that it is not already present in env */ }
+
+	name <- Name // PASS 1: synthesized name attribute
+
+	// all bases must be component definitions
+	// all paths in bases must be in env
+	Bases := path* 
+		{ forall b in bases, b in env, b is Component }
+	// TODO: cyclic inheritance check
+
+	// inherited environment
+	inherited <- union of: forall b in bases: b.env
+	
+	// member environment
+	env2 <- env + inherited + members#	// members# is a forward reference set
+
+	// member set
+	// note that env2 depends on members, to allow for forward references
+	Members := 
+		( MemberFunction(env2) 
+		| AssociatedConstant(env2))* 
+		// PASS 1 CHECK
+		{ }
+		// PASS 2 CHECK
+		{ }
+
+
+MemberFunction (env) := 
+	Function (env)
+
+Function(env) :=
+	
+	Name := identifier 
+		// PASS 1 CHECK
+		{ /* first pass: check that it is not already present in env */ }
+
+	ReturnType := path { path in env }	// visibility check
+	Arguments := Argument(env)*
+
+	// environment for body check is definition environment + arguments
+	bodyEnv <- env + { forall a in Arguments: a.name -> a }
+
+
+
+// Resolution rules are implemented in XXXResolver classes
+	// ModuleResolver(env, ...).resolveModule(RgModule) -> Module
+	// ModuleResolver(env, ...).buildForwardReferenceSet()
+// Environment is not contained in 'descriptor' classes
+// Where are the scopes filled?
+	// in resolver?
+	// after construction of the descriptor? setter?
+	// inside the descriptor?
+	// ** created as-needed during resolution (no need to store useless data)
+
+Create a module instance
+	- traverse all declarations of the module
+	- if a declaration needs a definition from the module
+- Resolve on-demand:
+	- type, returnType, argumentType is Lazy
+		-> stores a reference to the PSI element
+- Module scope resolution:
+	- create declarations, but do not resolve inside (but: provide callbacks to do so)

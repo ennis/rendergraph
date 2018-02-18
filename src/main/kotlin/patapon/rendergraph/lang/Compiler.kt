@@ -7,7 +7,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiManager
+import patapon.rendergraph.lang.ir.Module
+import patapon.rendergraph.lang.ir.PrettyPrinter
 import patapon.rendergraph.lang.psi.RgFile
+import patapon.rendergraph.lang.psi.RgImports
+import patapon.rendergraph.lang.psi.RgModule
+import patapon.rendergraph.lang.psi.RgModuleContents
 
 // Compiler parameters
 data class CompilerArguments(val sourceDirectory: String, val outputLibraryFile: String)
@@ -36,6 +41,32 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
         }
     }
 
+    fun compileFile(file: RgFile)
+    {
+        // get module declaration
+        val module = file.findChildByClass(RgModule::class.java)
+        val imports = file.findChildByClass(RgImports::class.java)
+        val moduleContents = file.findChildByClass(RgModuleContents::class.java)
+
+        if (module == null) {
+            TODO("Source files must have a module directive at the beginning")
+        }
+
+        val m = Module(module, imports!!, moduleContents!!)
+        m.forceFullResolve()
+        val ppBuffer = StringBuilder()
+        val prettyPrinter = PrettyPrinter(m, ppBuffer)
+        prettyPrinter.print()
+
+        LOG.info("After declaration pass:")
+        LOG.info(ppBuffer.toString())
+
+        // run phase 2: resolve and type check
+        // We make a difference between a 'full resolve' (typecheck the body and initializers), triggered by an explicit traversal of the element
+        // and a 'partial resolve' or 'typecheck resolve', triggered by a resolution of a reference to the element, for which we need the type
+        // A partial resolve may incur a full resolve if the body of an initializer or a function needs to be checked to determine the type
+    }
+
     fun compile() {
         // resolve the set of files to compile
         LOG.info("Input arguments: ${compilerArguments}")
@@ -58,10 +89,13 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
                 val rgpsi = psi as RgFile
                 // PSI found
                 LOG.info("PSI: [${vf}], ${rgpsi.children.size} root nodes")
+                compileFile(rgpsi)
             } else {
                 TODO("Handle not-yet-generated PSIs")
             }
         }
+
+
 
         //TODO("Generate context tree from PSI file")
 

@@ -56,4 +56,16 @@ Rg*Impl (generated)
     * 6. Type checking: for each file, for each expression (`TypeCheckingPass`)
         * Typecheck
 
-* Code generation
+* First pass: collect declarations
+
+* Declaration
+    * ComponentDeclaration
+* LexicalScope
+    * parent scope: LexicalScope?
+    * map name to declaration
+* Q: separate scope objects OR declaration implements scope?
+    * NO: a declaration can have multiple scopes
+
+* TODO
+    * Chain scopes, lookup
+    * Error reporting / diagnostics

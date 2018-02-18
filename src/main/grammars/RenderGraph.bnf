@@ -127,7 +127,7 @@ PathImpl ::= Path PathSegment* {
 }
 
 //====================================================================
-Type ::= PrimitiveType | Path
+Type ::= Path
 Qualifier ::= 'in' | 'out' | 'inout'
 
 //====================================================================
@@ -201,7 +201,7 @@ Block ::= '{' Statement* '}'
 
 //====================================================================
 // statements
-private Statement ::= EmptyStatement | ReturnStatement
+Statement ::= EmptyStatement | ReturnStatement
 
 EmptyStatement ::= Semi
 
