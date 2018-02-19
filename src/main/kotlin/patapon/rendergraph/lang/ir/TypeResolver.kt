@@ -1,7 +1,6 @@
 package patapon.rendergraph.lang.ir
 
 import com.intellij.psi.PsiElement
-import patapon.rendergraph.lang.psi.RgPrimitiveType
 import patapon.rendergraph.lang.psi.RgTokenType
 import patapon.rendergraph.lang.psi.RgTokenTypes
 import patapon.rendergraph.lang.psi.RgType

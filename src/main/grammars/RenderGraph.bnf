@@ -91,8 +91,6 @@ Initializer ::= FLOAT_LITERAL
               | UINT_LITERAL
               | DOUBLE_LITERAL
 
-PrimitiveType ::= int | float | double
-
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)

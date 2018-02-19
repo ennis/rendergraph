@@ -88,10 +88,6 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     const                                   {return CONST;}
     uniform                                 {return UNIFORM_KW;}
     return                                  {return RETURN;}
-    // GLSL types
-    float                                   {return FLOAT; }
-    double                                  {return DOUBLE; }
-    int                                     {return INT; }
     // Tokens
     "{"                                     {return LBRACE; }
     "}"                                     {return RBRACE; }
