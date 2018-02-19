@@ -69,3 +69,7 @@ Rg*Impl (generated)
 * TODO
     * Chain scopes, lookup
     * Error reporting / diagnostics
+    * testing infrastructure
+    * stable AST output
+    * stable context output
+    * global scope for identifiers

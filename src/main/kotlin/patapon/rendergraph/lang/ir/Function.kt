@@ -46,7 +46,8 @@ class Function(
     {
         var psiReturnType = psi.type
         if (psiReturnType == null) {
-            TODO("infer return type from expression body")
+            //TODO("infer return type from expression body")
+            return UnitType
         }
 
         var resolver = TypeResolver(bodyResolutionScope.value)

@@ -16,15 +16,22 @@ fun resolvePrimitiveTypes(path: Path): Type?
     }
 }
 
-class TypeResolver(scope: Scope)
+class TypeResolver(val scope: Scope)
 {
     fun resolveType(type: RgType): Type {
         val path = type.path
         val irPath = path.toIr()
-        // check for primitive types
-        val primitiveType = resolvePrimitiveTypes(irPath)
-        if (primitiveType != null) return primitiveType
-        // search for a type in scope
-        TODO()
+        if (irPath.pathSegments.size != 1)
+            TODO("resolve complex type paths")
+
+        val candidates = scope.findDeclarations(irPath.toString()).filterIsInstance<TypeDeclaration>()
+
+        val firstCandidate = candidates.firstOrNull()
+        if (firstCandidate != null) {
+            return firstCandidate.type
+        }
+        else {
+            return UnresolvedType
+        }
     }
 }

@@ -17,7 +17,6 @@ class Module(
 
     override val name = path.toString()
 
-
     override val attributes: List<Attribute>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
@@ -27,12 +26,8 @@ class Module(
 
     val imports: List<Path>
 
-    init {
-        imports = psiImports.importList.map { imp -> imp.path!!.toIr() }
-    }
-
     fun resolveDeclarations(contents: RgModuleContents): Scope {
-        val scope = ScopeImpl(NullLazy(), this) {
+        val scope = ScopeImpl(Lazy { BuiltinScope }, this) {
             contents.componentList.forEach { psiComponent ->
                 val component = Component(psiComponent, this@Module, declarations)
                 addDeclaration(component)
@@ -40,5 +35,9 @@ class Module(
         }
 
         return scope
+    }
+
+    init {
+        imports = psiImports.importList.map { imp -> imp.path!!.toIr() }
     }
 }

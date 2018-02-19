@@ -158,7 +158,7 @@ private ArgumentList ::= Argument (',' Argument)* /* empty */
 Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type)? (FunctionBody | Semi)
 
 //====================================================================
-private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun | PrimitiveType)
+private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun )
 private ComponentItem ::= !'}' (
                         Constant
                       | Function

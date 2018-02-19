@@ -35,7 +35,19 @@ class ScopeImpl(
 
     override fun findDeclarations(name: String): List<Declaration> {
         // this scope does not support symbols with the same name
-        return listOfNotNull(symbolTable.get(name))
+        val result = symbolTable.get(name)
+        return if (result != null) {
+            // found a result in this scope
+            listOf(result)
+        } else {
+            // look into enclosing scopes
+            val parent = getParentScope()
+            if (parent != null) {
+                parent.findDeclarations(name)
+            } else {
+                emptyList()
+            }
+        }
     }
 
     init {

@@ -2,8 +2,11 @@
 
 
 Module(env) :=
+	Imports(env)
 	// forward reference set
 	env2 <- env + Declarations# 
+
+
 	
 	Declarations := 
 		  Component (env2)
@@ -75,3 +78,11 @@ Create a module instance
 		-> stores a reference to the PSI element
 - Module scope resolution:
 	- create declarations, but do not resolve inside (but: provide callbacks to do so)
+	- Function( arguments: List<Argument>, returnType: Lazy<Type> )
+	- Argument( val name, val type: Lazy<Type>, val defaultValue: Lazy<Expression>)
+- Lazy scopes:
+	- 
+
+Minimal viable product:
+	- All GLSL statements and expressions
+	- 

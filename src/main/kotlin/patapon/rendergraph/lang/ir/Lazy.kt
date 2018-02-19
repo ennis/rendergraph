@@ -11,7 +11,7 @@ interface LazyValue<out T>
 abstract class LazyValueBase<out T>: LazyValue<T>
 {
     protected var resolving = false
-    override val isResolving = resolving
+    override val isResolving get() = resolving
 }
 
 class Lazy<out T>(private val resolve: () -> T): LazyValueBase<T>() {
@@ -33,7 +33,7 @@ class Lazy<out T>(private val resolve: () -> T): LazyValueBase<T>() {
         }
     }
 
-    override val isResolved = _value != null
+    override val isResolved get() = _value != null
 }
 
 class NullableLazy<out T>(private val resolve: () -> T?): LazyValueBase<T?>() {
@@ -57,7 +57,7 @@ class NullableLazy<out T>(private val resolve: () -> T?): LazyValueBase<T?>() {
         }
     }
 
-    override val isResolved = _resolved
+    override val isResolved get() = _resolved
 }
 
 class NullLazy<out T>(): LazyValue<T?>

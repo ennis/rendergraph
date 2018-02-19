@@ -1,10 +1,5 @@
 package patapon.rendergraph.lang.ir
 
-private fun ppType(type: Type): String
-{
-    return type.name
-}
-
 class PrettyPrinter(val root: Declaration, val outString: StringBuilder)
 {
     var indent = 0
@@ -60,11 +55,10 @@ class PrettyPrinter(val root: Declaration, val outString: StringBuilder)
 
     fun ppFunction(function: Function)
     {
-        appendln("Function '${function.name}' <'${ppType(function.returnType)}'>")
+        appendln("Function '${function.name}' <${function.returnType}>")
         withIndent {
             function.arguments.forEachIndexed { i, arg ->
-                append("Argument $i '${arg.name}' <'${ppType(arg.type)}'>")
-                ppType(arg.type)
+                append("Argument $i '${arg.name}' <${arg.type}>")
                 appendln()
             }
         }
