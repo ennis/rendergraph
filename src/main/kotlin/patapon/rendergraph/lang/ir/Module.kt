@@ -27,7 +27,7 @@ class Module(
     val imports: List<Path>
 
     fun resolveDeclarations(contents: RgModuleContents): Scope {
-        val scope = ScopeImpl(Lazy { BuiltinScope }, this) {
+        val scope = ScopeImpl(Lazy { PrimitiveScope }, this) {
             contents.componentList.forEach { psiComponent ->
                 val component = Component(psiComponent, this@Module, declarations)
                 addDeclaration(component)

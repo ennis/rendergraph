@@ -1,7 +1,7 @@
 package patapon.rendergraph.lang.ir
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
-object BuiltinScope: Scope {
+object PrimitiveScope : Scope {
     override val owningDeclaration = null
     override fun getParentScope() = null
 
