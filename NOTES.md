@@ -72,4 +72,5 @@ Rg*Impl (generated)
     * testing infrastructure
     * stable AST output
     * stable context output
-    * global scope for identifiers
+    * DONE global scope for identifiers
+    

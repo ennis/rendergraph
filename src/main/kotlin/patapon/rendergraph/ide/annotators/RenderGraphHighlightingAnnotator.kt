@@ -5,7 +5,6 @@ import com.intellij.lang.annotation.Annotator
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.psi.PsiElement
 import patapon.rendergraph.ide.colors.RenderGraphColors
-import patapon.rendergraph.lang.ir.toIr
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.RgRenderPassItem
 
@@ -27,7 +26,7 @@ class RenderGraphHighlightingAnnotator: Annotator
 
     private fun highlightTypeElement(element: RgType): TextAttributesKey? {
         // Recognize primitive types
-        return when (element.path.toIr().toString()) {
+        return when (element.path.text) {
             "float" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey
             "int" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey
             "double" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey

@@ -1,4 +1,4 @@
-package patapon.rendergraph.lang.ir
+package patapon.rendergraph.lang.declarations
 
 fun Collection<Declaration>.forceFullResolve()
 {

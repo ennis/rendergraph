@@ -1,4 +1,6 @@
-package patapon.rendergraph.lang.ir
+package patapon.rendergraph.lang.types
+
+import patapon.rendergraph.lang.declarations.TypeDeclaration
 
 const val FLOAT_TYPE_NAME: String = "float"
 const val DOUBLE_TYPE_NAME: String = "double"
@@ -36,7 +38,6 @@ object UnresolvedType: PrimitiveType(0)
 
 abstract class PrimitiveTypeDeclaration(override val type: Type, override val name: String): TypeDeclaration
 {
-    override val attributes = emptyList<Attribute>()
 }
 
 // Declarations

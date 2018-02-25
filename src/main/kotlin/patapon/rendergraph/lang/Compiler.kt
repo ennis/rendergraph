@@ -4,15 +4,17 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiManager
-import patapon.rendergraph.lang.ir.Module
-import patapon.rendergraph.lang.ir.PrettyPrinter
+import patapon.rendergraph.lang.declarations.BindingContextImpl
+import patapon.rendergraph.lang.diagnostics.Diagnostic
+import patapon.rendergraph.lang.diagnostics.DiagnosticSink
+import patapon.rendergraph.lang.utils.PrettyPrinterVisitor
 import patapon.rendergraph.lang.psi.RgFile
 import patapon.rendergraph.lang.psi.RgImports
 import patapon.rendergraph.lang.psi.RgModule
 import patapon.rendergraph.lang.psi.RgModuleContents
+import patapon.rendergraph.lang.resolve.DeclarationResolver
+import patapon.rendergraph.lang.types.TypeResolver
 
 // Compiler parameters
 data class CompilerArguments(val sourceDirectory: String, val outputLibraryFile: String)
@@ -52,19 +54,22 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
             TODO("Source files must have a module directive at the beginning")
         }
 
-        val m = Module(module, imports!!, moduleContents!!)
-        m.forceFullResolve()
+        val diagnosticSink = object : DiagnosticSink {
+            override fun report(diag: Diagnostic) {
+                LOG.info("compilation diag: " + diag.message)
+            }
+        }
+
+        val bindingContext = BindingContextImpl()
+        val typeResolver = TypeResolver(bindingContext, diagnosticSink)
+        val declarationResolver = DeclarationResolver(bindingContext, typeResolver, diagnosticSink)
         val ppBuffer = StringBuilder()
-        val prettyPrinter = PrettyPrinter(m, ppBuffer)
-        prettyPrinter.print()
+        val prettyPrinter = PrettyPrinterVisitor(declarationResolver, typeResolver, ppBuffer)
+        file.acceptChildren(prettyPrinter)
 
         LOG.info("After declaration pass:")
         LOG.info(ppBuffer.toString())
 
-        // run phase 2: resolve and type check
-        // We make a difference between a 'full resolve' (typecheck the body and initializers), triggered by an explicit traversal of the element
-        // and a 'partial resolve' or 'typecheck resolve', triggered by a resolution of a reference to the element, for which we need the type
-        // A partial resolve may incur a full resolve if the body of an initializer or a function needs to be checked to determine the type
     }
 
     fun compile() {

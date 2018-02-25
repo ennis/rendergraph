@@ -1,46 +1,53 @@
 
-
+// All synthesized attributes are lazily evaluated
+// All synthesized attributes are stored in 'descriptors'
 
 Module(env) :=
 	Imports(env)
-	// forward reference set
-	env2 <- env + Declarations# 
+
+	memberEnv <- {
+        env + declSet
+	}
+
+    // note that there is a cyclic dependency between memberEnv and declSet synthesized attributes, to allow for forward references
+	Declarations(declSet) := (Component(memberEnv) | Function(memberEnv))*
 
 
-	
-	Declarations := 
-		  Component (env2)
-		| Function (env2)
+Component(in env, out decl) :=
 
-Component (env) :=
+	Name := identifier(name)
+		{
+		     // Name must not be already in env (redeclaration)
+		     decl.name <- name
+		}
 
-	Name := identifier 
-		// PASS 1 CHECK
-		{ /* first pass: check that it is not already present in env */ }
-
-	name <- Name // PASS 1: synthesized name attribute
-
-	// all bases must be component definitions
-	// all paths in bases must be in env
 	Bases := path* 
-		{ forall b in bases, b in env, b is Component }
-	// TODO: cyclic inheritance check
+		{
+	        // all bases must be component definitions
+	        // all paths in bases must be in env
+	        // values defined in bases must not conflict
 
-	// inherited environment
-	inherited <- union of: forall b in bases: b.env
+		    allValues = hashmap<String, Value>();
+		    foreach(b in component.bases) {
+		        bdef = env.getDefinition<Component>();
+                // query synthesized attribute: members
+                members = bdef.members
+                // check intersection of members with allValues
+                if (intersection(members,allValues) != null) ERROR()
+                allValues = { members + allValues }
+		    }
+		}
+
+
+	inherited <- {
+	    // union of all memberEnv for each base
+	}
 	
-	// member environment
-	env2 <- env + inherited + members#	// members# is a forward reference set
+	env2 <- {
+	    env + inherited + members
+	}
 
-	// member set
-	// note that env2 depends on members, to allow for forward references
-	Members := 
-		( MemberFunction(env2) 
-		| AssociatedConstant(env2))* 
-		// PASS 1 CHECK
-		{ }
-		// PASS 2 CHECK
-		{ }
+	Members(out members) := (MemberFunction(env2) | AssociatedConstant(env2))* { }
 
 
 MemberFunction (env) := 
@@ -80,6 +87,7 @@ Create a module instance
 	- create declarations, but do not resolve inside (but: provide callbacks to do so)
 	- Function( arguments: List<Argument>, returnType: Lazy<Type> )
 	- Argument( val name, val type: Lazy<Type>, val defaultValue: Lazy<Expression>)
+- Type queries can happen anywhere in the PSI!
 - Lazy scopes:
 	- 
 

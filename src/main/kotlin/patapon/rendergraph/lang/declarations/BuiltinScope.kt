@@ -1,4 +1,10 @@
-package patapon.rendergraph.lang.ir
+package patapon.rendergraph.lang.declarations
+
+import patapon.rendergraph.lang.resolve.Scope
+import patapon.rendergraph.lang.types.DoubleTypeDeclaration
+import patapon.rendergraph.lang.types.FloatTypeDeclaration
+import patapon.rendergraph.lang.types.IntegerTypeDeclaration
+import patapon.rendergraph.lang.types.UnitTypeDeclaration
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
 object BuiltinScope: Scope {
@@ -13,7 +19,7 @@ object BuiltinScope: Scope {
         return listOfNotNull(symbolTable.get(name))
     }
 
-    val symbolTable = mapOf<String,Declaration>(
+    val symbolTable = mapOf<String, Declaration>(
             // XXX check that the names are different?
             IntegerTypeDeclaration.name to IntegerTypeDeclaration,
             FloatTypeDeclaration.name to FloatTypeDeclaration,

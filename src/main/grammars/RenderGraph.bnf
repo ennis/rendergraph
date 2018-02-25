@@ -81,7 +81,7 @@
 
 
 //====================================================================
-Document ::= Module? Imports ModuleContents
+Document ::= Module
 
 //Document ::= PrimitiveTopologyItem
 private Semi ::= ';'
@@ -94,7 +94,8 @@ Initializer ::= FLOAT_LITERAL
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-Module ::= MODULE_KW PathImpl Semi { pin=1 }
+Module ::= ModuleDirective? Imports ModuleContents { pin=1 }
+private ModuleDirective ::= MODULE_KW PathImpl Semi { pin=1 }
 ModuleContents ::= Item*
 Imports ::= Import*
 private ImportRecover ::= !(Item)
@@ -103,7 +104,6 @@ Import ::= IMPORT_KW PathImpl Semi { pin=1  }
 //====================================================================
 Attribute ::= '@' PathImpl ('(' ')')?
 private AttributeList ::= Attribute*
-
 
 //====================================================================
 // ITEMS
@@ -148,14 +148,14 @@ DepthTestItem ::= 'depth_test' '(' bool_literal ')' Semi  { pin=2 implements="pa
 //====================================================================
 private ArglistRecover ::= !(')' | ',')
 
-Argument ::= AttributeList Qualifier? identifier ':' Type {
+Parameter ::= AttributeList Qualifier? identifier ':' Type {
     pin=3
     recoverWhile=ArglistRecover
 }
 
-private ArgumentList ::= Argument (',' Argument)* /* empty */
+private ParameterList ::= Parameter (',' Parameter)* /* empty */
 //ReturnType ::= ':' Type
-Function ::= AttributeList fun identifier '(' ArgumentList? ')' (':' Type)? (FunctionBody | Semi)
+Function ::= AttributeList fun identifier '(' ParameterList? ')' (':' Type)? (FunctionBody | Semi)
 
 //====================================================================
 private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun )
@@ -164,11 +164,11 @@ private ComponentItem ::= !'}' (
                       | Function
                       | Pass) { pin=1 recoverWhile=ComponentItemRecover }
 
-ComponentBase ::= PathImpl
-private ComponentBases ::= ComponentBase (',' ComponentBase)*
+private ComponentBase ::= PathImpl
+ComponentBases ::= ComponentBase (',' ComponentBase)*
 
 Component ::= AttributeList COMPONENT_KW identifier (':' ComponentBases)? '{' ComponentItem* '}' {
-    implements = [ "com.intellij.psi.PsiNameIdentifierOwner" ]
+    implements = [ "com.intellij.psi.PsiNameIdentifierOwner"; "patapon.rendergraph.lang.psi.RgDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgComponentImplMixin"
     stubClass = "patapon.rendergraph.lang.stubs.RgComponentStub"
     elementTypeFactory = "patapon.rendergraph.lang.stubs.StubImplementationsKt.factory"
@@ -199,11 +199,21 @@ Block ::= '{' Statement* '}'
 
 //====================================================================
 // statements
-Statement ::= EmptyStatement | ReturnStatement
+private Statement ::= EmptyStatement | ReturnStatement
 
-EmptyStatement ::= Semi
+EmptyStatement ::= Semi {
+    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
+}
 
-ReturnStatement ::= return Expression Semi
+ReturnStatement ::= return Expression Semi {
+    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
+}
 
+ExpressionStatement ::= Expression Semi {
+    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
+}
+
+//====================================================================
+// expressions
 Expression ::= identifier
 

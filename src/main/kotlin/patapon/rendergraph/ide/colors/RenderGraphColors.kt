@@ -6,7 +6,7 @@ import com.intellij.openapi.editor.DefaultLanguageHighlighterColors as Default
 
 enum class RenderGraphColors(humanName: String, val default: TextAttributesKey) {
     IDENTIFIER("Identifier", Default.IDENTIFIER),
-    FUNCTION("Function", Default.FUNCTION_DECLARATION),
+    FUNCTION("FunctionDeclaration", Default.FUNCTION_DECLARATION),
     RENDER_PASS_ITEM("Render pass item", Default.STATIC_FIELD),
     //METHOD("Method", Default.INSTANCE_METHOD),
     //ASSOC_FUNCTION("Associated function", Default.STATIC_METHOD),
