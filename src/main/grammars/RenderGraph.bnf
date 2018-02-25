@@ -94,7 +94,10 @@ Initializer ::= FLOAT_LITERAL
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-Module ::= ModuleDirective? Imports ModuleContents { pin=1 }
+Module ::= ModuleDirective? Imports ModuleContents {
+    pin=1
+    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
+}
 private ModuleDirective ::= MODULE_KW PathImpl Semi { pin=1 }
 ModuleContents ::= Item*
 Imports ::= Import*
@@ -129,7 +132,10 @@ Type ::= Path
 Qualifier ::= 'in' | 'out' | 'inout'
 
 //====================================================================
-Constant ::=  AttributeList const val identifier (':' Type)? ('=' Initializer)? Semi { pin=2 }
+Constant ::=  AttributeList const val identifier (':' Type)? ('=' Initializer)? Semi {
+    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
+    pin=2
+}
 
 //====================================================================
 Uniform ::= AttributeList UNIFORM_KW val identifier (':' Type)? ('=' Initializer)? Semi { pin=2 }
@@ -155,7 +161,9 @@ Parameter ::= AttributeList Qualifier? identifier ':' Type {
 
 private ParameterList ::= Parameter (',' Parameter)* /* empty */
 //ReturnType ::= ':' Type
-Function ::= AttributeList fun identifier '(' ParameterList? ')' (':' Type)? (FunctionBody | Semi)
+Function ::= AttributeList fun identifier '(' ParameterList? ')' (':' Type)? (FunctionBody | Semi) {
+    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
+}
 
 //====================================================================
 private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun )

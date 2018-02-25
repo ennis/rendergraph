@@ -21,7 +21,7 @@ class PrettyPrinterVisitor(
         val decl = declarationResolver.resolveModuleDeclaration(o)
         appendln("Module '${o.path?.text}' name '${decl.name}'")
         withIndent {
-            o.acceptChildren(this)
+            o.moduleContents!!.acceptChildren(this)
         }
     }
 

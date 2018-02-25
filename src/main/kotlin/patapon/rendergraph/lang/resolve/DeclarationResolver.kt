@@ -3,7 +3,9 @@ package patapon.rendergraph.lang.resolve
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiIdentifier
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
+import org.jetbrains.uast.getUastParentOfType
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*
@@ -50,7 +52,23 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
 {
     fun resolveDeclarationWithResolutionScope(decl: RgDeclaration): DeclarationWithResolutionScope
     {
-        TODO()
+        var result: DeclarationWithResolutionScope? = null
+        decl.accept(object : RgVisitor() {
+            override fun visitComponent(o: RgComponent) {
+                result = resolveComponentDeclaration(o)
+            }
+            /*override fun visitFunction(o: RgFunction) {
+                result = resolveFunctionDeclaration(o)
+            }
+            override fun visitConstant(o: RgConstant) {
+                result = resolveConstantDeclaration(o)
+            }*/
+            override fun visitModule(o: RgModule) {
+                result = resolveModuleDeclaration(o)
+            }
+        })
+
+        return result!!
     }
 
     fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration
@@ -60,39 +78,35 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
         }
     }
 
-    fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration
+    fun getParentDeclaration(decl: RgDeclaration): DeclarationWithResolutionScope
     {
-        val owningDecl = resolveDeclarationWithResolutionScope(component.parentOfType<RgDeclaration>()!!)
-        return resolveComponentDeclaration(owningDecl, component)
+        return resolveDeclarationWithResolutionScope(PsiTreeUtil.getParentOfType(decl, RgDeclaration::class.java)!!)
     }
 
-    fun resolveConstantDeclaration(constant: RgConstant): ConstantDeclaration
-    {
-        TODO()
-    }
+    fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
+    fun resolveConstantDeclaration(constant: RgConstant): ConstantDeclaration = resolveConstantDeclaration(null, constant)
+    fun resolveFunctionDeclaration(function: RgFunction): FunctionDeclaration = resolveFunctionDeclaration(null, function)
 
-    fun resolveFunctionDeclaration(function: RgFunction): FunctionDeclaration
-    {
-        TODO()
-    }
-
-    fun resolveFunctionDeclaration(owningDeclaration: DeclarationWithResolutionScope, function: RgFunction): FunctionDeclaration
+    fun resolveFunctionDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, function: RgFunction): FunctionDeclaration
     {
         return bindingContext.functionDeclarations.getOrPut(function) {
+            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(function)
             FunctionDeclarationImpl(owningDeclaration, function.identifier.toString(), this, typeResolver, function)
         }
     }
 
-    fun resolveConstantDeclaration(owningDeclaration: DeclarationWithResolutionScope, constant: RgConstant): ConstantDeclaration
+    fun resolveConstantDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, constant: RgConstant): ConstantDeclaration
     {
         return bindingContext.constantDeclarations.getOrPut(constant) {
+            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(constant)
             ConstantDeclarationImpl(owningDeclaration, constant.identifier.toString(), typeResolver, constant)
         }
     }
 
-    fun resolveComponentDeclaration(owningDeclaration: DeclarationWithResolutionScope, component: RgComponent): ComponentDeclaration
+    fun resolveComponentDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, component: RgComponent): ComponentDeclaration
     {
         return bindingContext.componentDeclarations.getOrPut(component) {
+            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(component)
             ComponentDeclarationImpl(owningDeclaration, component.name!!, this, component)
         }
     }

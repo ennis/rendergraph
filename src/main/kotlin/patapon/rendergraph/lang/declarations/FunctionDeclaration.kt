@@ -7,7 +7,7 @@ import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
 
 
-interface FunctionDeclaration: Declaration
+interface FunctionDeclaration: DeclarationWithResolutionScope
 {
     //val arguments: Collection<Argument>
     val returnType: Type
@@ -39,6 +39,8 @@ class FunctionDeclarationImpl(
     override val argumentResolutionScope: Scope
         get() = owningDeclaration.resolutionScope
 
+    override val resolutionScope: Scope
+        get() = bodyResolutionScope
 
     init {
        // body = NullableLazy { null }
