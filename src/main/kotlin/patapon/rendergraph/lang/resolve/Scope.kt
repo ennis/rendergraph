@@ -1,4 +1,7 @@
-package patapon.rendergraph.lang.ir
+package patapon.rendergraph.lang.resolve
+
+import patapon.rendergraph.lang.declarations.Declaration
+import patapon.rendergraph.lang.declarations.LazyValue
 
 
 interface Scope
@@ -19,14 +22,14 @@ interface ScopeBuilder
 }
 
 class ScopeImpl(
-        val enclosingScope: LazyValue<Scope?>,
+        val enclosingScope: Scope?,
         override val owningDeclaration: Declaration?,
         initializer: ScopeBuilder.() -> Unit): Scope
 {
-    var symbolTable = mutableMapOf<String,Declaration>()
+    var symbolTable = mutableMapOf<String, Declaration>()
 
     override fun getParentScope(): Scope? {
-        return enclosingScope.value
+        return enclosingScope
     }
 
     override fun getAllDeclarations(): Collection<Declaration> {
