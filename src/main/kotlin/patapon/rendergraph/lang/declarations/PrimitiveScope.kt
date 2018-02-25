@@ -7,7 +7,7 @@ import patapon.rendergraph.lang.types.IntegerTypeDeclaration
 import patapon.rendergraph.lang.types.UnitTypeDeclaration
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
-object BuiltinScope: Scope {
+object PrimitiveScope: Scope {
     override val owningDeclaration = null
     override fun getParentScope() = null
 
