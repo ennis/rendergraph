@@ -9,7 +9,7 @@ import patapon.rendergraph.lang.psi.RgComponent
 import patapon.rendergraph.lang.psi.impl.RgComponentImpl
 
 // Base class for PSI element stubs
-abstract class RgElementStub<PsiT : PsiElement>(parent: StubElement<*>?, elementType: IStubElementType<out StubElement<*>, *>?) :
+/*abstract class RgElementStub<PsiT : PsiElement>(parent: StubElement<*>?, elementType: IStubElementType<out StubElement<*>, *>?) :
         StubBase<PsiT>(parent, elementType)
 
 // Base class for PSI element stubs type objects
@@ -32,18 +32,18 @@ abstract class RsStubElementType<StubT : StubElement<*>, PsiT : PsiElement>(debu
 fun factory(name: String): RsStubElementType<*, *> = when (name) {
     "COMPONENT" -> RgComponentStub.Type
     else -> error("Unknown element $name")
-}
+}*/
 
 //=================================================================
 // Stub interface for named objects
-interface RgNamedStub
+/*interface RgNamedStub
 {
     val name: String
-}
+}*/
 
 //=================================================================
 // Stub class for shader components
-class RgComponentStub(parent: StubElement<*>?, elementType: IStubElementType<*, *>, override val name: String) :
+/*class RgComponentStub(parent: StubElement<*>?, elementType: IStubElementType<*, *>, override val name: String) :
         StubBase<RgComponent>(parent, elementType),
         RgNamedStub
 {
@@ -62,4 +62,4 @@ class RgComponentStub(parent: StubElement<*>?, elementType: IStubElementType<*, 
         override fun createStub(psi: RgComponent, parentStub: StubElement<*>?) =
                 RgComponentStub(parentStub, this, psi.identifier.text)
     }
-}
+}*/

@@ -46,6 +46,7 @@ fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration>
     return scope.findDeclarations(path.toString())
 }
 
+
 // Responsible for resolving the contents of declarations with resolution scopes (components, functions, constants with initializers...)
 class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: TypeResolver, val d: DiagnosticSink): RgVisitor()
 {
@@ -73,7 +74,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration
     {
         return bindingContext.moduleDeclarations.getOrPut(mod) {
-            ModuleDeclarationImpl(mod.path?.toString() ?: "<unnamed>", this, mod)
+            ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, this, mod)
         }
     }
 
@@ -90,7 +91,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     {
         return bindingContext.functionDeclarations.getOrPut(function) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(function)
-            FunctionDeclarationImpl(owningDeclaration, function.identifier.text, this, typeResolver, function)
+            FunctionDeclarationImpl(owningDeclaration, function.name ?: UNNAMED_FUNCTION, this, typeResolver, function)
         }
     }
 
@@ -98,7 +99,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     {
         return bindingContext.constantDeclarations.getOrPut(constant) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(constant)
-            ConstantDeclarationImpl(owningDeclaration, constant.identifier!!.text, typeResolver, constant)
+            ConstantDeclarationImpl(owningDeclaration, constant.name ?: UNNAMED_CONSTANT, typeResolver, constant)
         }
     }
 
@@ -106,7 +107,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     {
         return bindingContext.componentDeclarations.getOrPut(component) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(component)
-            ComponentDeclarationImpl(owningDeclaration, component.name!!, this, component)
+            ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component)
         }
     }
 

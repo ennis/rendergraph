@@ -94,15 +94,17 @@ Initializer ::= FLOAT_LITERAL
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-Module ::= ModuleDirective? Imports ModuleContents {
+Module ::= (MODULE_KW identifier Semi)? Imports ModuleContents {
     pin=1
-    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ nameIdentifier="identifier" ]
 }
-private ModuleDirective ::= MODULE_KW PathImpl Semi { pin=1 }
+
 ModuleContents ::= Item*
 Imports ::= Import*
 private ImportRecover ::= !(Item)
-Import ::= IMPORT_KW PathImpl Semi { pin=1  }
+Import ::= IMPORT_KW PathImpl Semi { pin=1 }
 
 //====================================================================
 Attribute ::= '@' PathImpl ('(' ')')?
@@ -133,12 +135,19 @@ Qualifier ::= 'in' | 'out' | 'inout'
 
 //====================================================================
 Constant ::=  AttributeList const val identifier (':' Type)? ('=' Initializer)? Semi {
-    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
     pin=2
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ nameIdentifier="identifier" ]
 }
 
 //====================================================================
-Uniform ::= AttributeList UNIFORM_KW val identifier (':' Type)? ('=' Initializer)? Semi { pin=2 }
+Uniform ::= AttributeList UNIFORM_KW val identifier (':' Type)? ('=' Initializer)? Semi {
+    pin=2
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ nameIdentifier="identifier" ]
+}
 
 //====================================================================
 private ParamRecover ::= !(')' | Semi)
@@ -157,29 +166,37 @@ private ArglistRecover ::= !(')' | ',')
 Parameter ::= AttributeList Qualifier? identifier ':' Type {
     pin=3
     recoverWhile=ArglistRecover
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ nameIdentifier="identifier" ]
 }
 
-private ParameterList ::= Parameter (',' Parameter)* /* empty */
-//ReturnType ::= ':' Type
+private ParameterList ::= Parameter (',' Parameter)*
+
 Function ::= AttributeList fun identifier '(' ParameterList? ')' (':' Type)? (FunctionBody | Semi) {
-    implements = [ "patapon.rendergraph.lang.psi.RgDeclaration" ]
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ returnType="Type" nameIdentifier="identifier" ]
 }
 
 //====================================================================
 private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun )
-private ComponentItem ::= !'}' (
-                        Constant
-                      | Function
-                      | Pass) { pin=1 recoverWhile=ComponentItemRecover }
+
+private ComponentItem ::= !'}' ( Constant | Function | Pass) {
+    pin=1
+    recoverWhile=ComponentItemRecover
+}
 
 private ComponentBase ::= PathImpl
+
 ComponentBases ::= ComponentBase (',' ComponentBase)*
 
 Component ::= AttributeList COMPONENT_KW identifier (':' ComponentBases)? '{' ComponentItem* '}' {
-    implements = [ "com.intellij.psi.PsiNameIdentifierOwner"; "patapon.rendergraph.lang.psi.RgDeclaration" ]
-    mixin = "patapon.rendergraph.lang.psi.impl.RgComponentImplMixin"
-    stubClass = "patapon.rendergraph.lang.stubs.RgComponentStub"
-    elementTypeFactory = "patapon.rendergraph.lang.stubs.StubImplementationsKt.factory"
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ nameIdentifier="identifier" ]
+    //stubClass = "patapon.rendergraph.lang.stubs.RgComponentStub"
+    //elementTypeFactory = "patapon.rendergraph.lang.stubs.StubImplementationsKt.factory"
 }
 
 //====================================================================
@@ -202,7 +219,12 @@ Pass ::= AttributeList PASS_KW identifier? '{' PassItem* '}'
 //====================================================================
 // code
 BraceBalancedBlock ::=  ('{' BraceBalancedBlock '}' | << unpairedToken >>)*
-FunctionBody ::= Block | '=' Expression Semi
+
+FunctionBody ::= Block | '=' Expression Semi {
+    methods = [ blockBody="Block"; expressionBody="Expression" ]
+}
+
+//====================================================================
 Block ::= '{' Statement* '}'
 
 //====================================================================

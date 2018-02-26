@@ -19,7 +19,7 @@ class PrettyPrinterVisitor(
 
     override fun visitModule(o: RgModule) {
         val decl = declarationResolver.resolveModuleDeclaration(o)
-        appendln("Module '${o.path?.text}' name '${decl.name}'")
+        appendln("Module '${o.name}' name '${decl.name}' fqName TODO")
         withIndent {
             o.moduleContents!!.acceptChildren(this)
         }
@@ -39,19 +39,19 @@ class PrettyPrinterVisitor(
 
     override fun visitConstant(o: RgConstant) {
         val decl = declarationResolver.resolveConstantDeclaration(o)
-        appendln("Constant '${o.identifier!!.text}' name '${decl.name}' type ${decl.type}")
+        appendln("Constant '${o.name}' name '${decl.name}' type ${decl.type}")
     }
 
     override fun visitFunction(o: RgFunction) {
         val decl = declarationResolver.resolveFunctionDeclaration(o)
-        appendln("Function '${o.identifier.text}' name '${decl.name}' returnType ${decl.returnType}")
+        appendln("Function '${o.name}' name '${decl.name}' returnType ${decl.returnType}")
         withIndent {
             o.acceptChildren(this)
         }
     }
 
     override fun visitParameter(o: RgParameter) {
-        appendln("Parameter '${o.identifier.text}'")
+        appendln("Parameter '${o.name}'")
     }
 
     private fun printIndent()

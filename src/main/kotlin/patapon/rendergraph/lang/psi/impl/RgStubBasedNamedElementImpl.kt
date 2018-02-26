@@ -8,10 +8,9 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import patapon.rendergraph.lang.psi.RgElementTypes.*
-import patapon.rendergraph.lang.stubs.RgNamedStub
 
 // Base class for named elements with stubs
-abstract class RgStubBasedNamedElementImpl<StubT> :
+/*abstract class RgStubBasedNamedElementImpl<StubT> :
         StubBasedPsiElementBase<StubT>,
         PsiNameIdentifierOwner
         where StubT : RgNamedStub, StubT : StubElement<*>
@@ -36,4 +35,4 @@ abstract class RgStubBasedNamedElementImpl<StubT> :
     override fun getTextOffset(): Int = nameIdentifier?.textOffset ?: super.getTextOffset()
 
     //override fun getPresentation(): ItemPresentation = getPresentation(this)
-}
+}*/
