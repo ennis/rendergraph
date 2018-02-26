@@ -39,19 +39,19 @@ class PrettyPrinterVisitor(
 
     override fun visitConstant(o: RgConstant) {
         val decl = declarationResolver.resolveConstantDeclaration(o)
-        appendln("Constant '${o.identifier}' name '${decl.name}' type ${decl.type}")
+        appendln("Constant '${o.identifier!!.text}' name '${decl.name}' type ${decl.type}")
     }
 
     override fun visitFunction(o: RgFunction) {
         val decl = declarationResolver.resolveFunctionDeclaration(o)
-        appendln("Function '${o.identifier}' name '${decl.name}' returnType ${decl.returnType}")
+        appendln("Function '${o.identifier.text}' name '${decl.name}' returnType ${decl.returnType}")
         withIndent {
             o.acceptChildren(this)
         }
     }
 
     override fun visitParameter(o: RgParameter) {
-        appendln("Parameter '${o.identifier}'")
+        appendln("Parameter '${o.identifier.text}'")
     }
 
     private fun printIndent()

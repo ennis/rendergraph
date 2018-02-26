@@ -91,7 +91,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     {
         return bindingContext.functionDeclarations.getOrPut(function) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(function)
-            FunctionDeclarationImpl(owningDeclaration, function.identifier.toString(), this, typeResolver, function)
+            FunctionDeclarationImpl(owningDeclaration, function.identifier.text, this, typeResolver, function)
         }
     }
 
@@ -99,7 +99,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     {
         return bindingContext.constantDeclarations.getOrPut(constant) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(constant)
-            ConstantDeclarationImpl(owningDeclaration, constant.identifier.toString(), typeResolver, constant)
+            ConstantDeclarationImpl(owningDeclaration, constant.identifier!!.text, typeResolver, constant)
         }
     }
 
