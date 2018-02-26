@@ -2,15 +2,11 @@ package patapon.rendergraph.lang.resolve
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileTypes.FileType
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.PsiReferenceBase
-import patapon.rendergraph.ide.visual.GraphViewToolWindowFactory
 import patapon.rendergraph.lang.psi.RgComponent
 import java.util.ArrayList
-import com.intellij.openapi.vcs.changes.committed.MockAbstractVcs.getKey
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.PsiManager
 import com.intellij.openapi.vfs.VirtualFile
@@ -19,7 +15,6 @@ import com.intellij.psi.search.FileTypeIndex
 import com.intellij.util.indexing.FileBasedIndex
 import patapon.rendergraph.lang.RenderGraphFileType
 import patapon.rendergraph.lang.psi.RgFile
-
 
 class RgPathReference(element: PsiElement, textRange: TextRange): PsiReferenceBase<PsiElement>(element, textRange)
 {

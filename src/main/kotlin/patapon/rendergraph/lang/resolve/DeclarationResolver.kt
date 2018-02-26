@@ -5,7 +5,6 @@ import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
-import org.jetbrains.uast.getUastParentOfType
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*

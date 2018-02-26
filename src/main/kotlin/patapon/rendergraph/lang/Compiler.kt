@@ -10,9 +10,6 @@ import patapon.rendergraph.lang.diagnostics.Diagnostic
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.utils.PrettyPrinterVisitor
 import patapon.rendergraph.lang.psi.RgFile
-import patapon.rendergraph.lang.psi.RgImports
-import patapon.rendergraph.lang.psi.RgModule
-import patapon.rendergraph.lang.psi.RgModuleContents
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.types.TypeResolver
 
@@ -45,15 +42,6 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
 
     fun compileFile(file: RgFile)
     {
-        // get module declaration
-        val module = file.findChildByClass(RgModule::class.java)
-        val imports = file.findChildByClass(RgImports::class.java)
-        val moduleContents = file.findChildByClass(RgModuleContents::class.java)
-
-        if (module == null) {
-            TODO("Source files must have a module directive at the beginning")
-        }
-
         val diagnosticSink = object : DiagnosticSink {
             override fun report(diag: Diagnostic) {
                 LOG.info("compilation diag: " + diag.message)
@@ -66,10 +54,7 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
         val ppBuffer = StringBuilder()
         val prettyPrinter = PrettyPrinterVisitor(declarationResolver, typeResolver, ppBuffer)
         file.acceptChildren(prettyPrinter)
-
-        LOG.info("After declaration pass:")
         LOG.info(ppBuffer.toString())
-
     }
 
     fun compile() {
@@ -99,12 +84,6 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
                 TODO("Handle not-yet-generated PSIs")
             }
         }
-
-
-
-        //TODO("Generate context tree from PSI file")
-
-
 
     }
 }
