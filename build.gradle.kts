@@ -136,26 +136,6 @@ fun findJavaExecutable(javaHome: File): String? {
 
 tasks.withType<RunIdeTask> {
     setJbreVersion("jbrex8u152b1136.11")
-    //val jbre = JbreResolver(project).resolve("jbrex8u152b1136.11")
-    val cacheDirectoryPath = Paths.get(project.gradle.gradleUserHomeDir.absolutePath, "caches/modules-2/files-2.1/com.jetbrains/jbre").toString()
-
-    val artifactName = "${jbreVersion}_${platform()}_${arch()}"
-    println("artifactName: ${artifactName}")
-    val javaDir = File(cacheDirectoryPath, artifactName)
-    var javaExec: String? = null
-    if (javaDir.exists()) {
-        if (javaDir.isDirectory()) {
-            println("javadir: ${javaDir}")
-            javaExec = findJavaExecutable(javaDir)
-            println("javaexec: ${javaExec}")
-        }
-        javaDir.delete()
-    }
-
-    if (javaExec != null) {
-        executable = javaExec
-    }
-    // (findProperty("intellijJre") as? String)?.let(this::setExecutable)
 }
 
 val generateLexer = task<GenerateLexer>("generateLexer") {
