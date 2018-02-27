@@ -1,10 +1,5 @@
 package patapon.rendergraph.lang.utils
 
-import com.intellij.psi.PsiFile
-import patapon.rendergraph.lang.declarations.ComponentDeclaration
-import patapon.rendergraph.lang.declarations.Declaration
-import patapon.rendergraph.lang.declarations.FunctionDeclaration
-import patapon.rendergraph.lang.declarations.ModuleDeclaration
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.types.TypeResolver
@@ -37,8 +32,8 @@ class PrettyPrinterVisitor(
         }
     }
 
-    override fun visitConstant(o: RgConstant) {
-        val decl = declarationResolver.resolveConstantDeclaration(o)
+    override fun visitVariable(o: RgVariable) {
+        val decl = declarationResolver.resolveVariableDeclaration(o)
         appendln("Constant '${o.name}' name '${decl.name}' type ${decl.type}")
     }
 

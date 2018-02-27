@@ -1,6 +1,6 @@
 package patapon.rendergraph.lang.declarations
 
-import patapon.rendergraph.lang.psi.RgConstant
+import patapon.rendergraph.lang.psi.RgVariable
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
 
@@ -13,11 +13,11 @@ class ConstantDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
         val typeResolver: TypeResolver,
-        constant: RgConstant) : ConstantDeclaration
+        variable: RgVariable) : ConstantDeclaration
 {
     val type_ = Lazy {
         typeResolver.checkConstantDeclaration(
-                constant,
+                variable,
                 owningDeclaration.resolutionScope,
                 owningDeclaration.resolutionScope)
     }

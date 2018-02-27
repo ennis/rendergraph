@@ -13,6 +13,10 @@
   elementTypeClass="patapon.rendergraph.lang.psi.RgElementType"
   tokenTypeClass="patapon.rendergraph.lang.psi.RgTokenType"
 
+  // expression rules
+  extends(".*Expression")=expression
+
+
   tokens = [
           LBRACE      =  '{'
           RBRACE      =  '}'
@@ -81,169 +85,199 @@
 
 
 //====================================================================
-Document ::= Module
+Document ::= module
 
 //Document ::= PrimitiveTopologyItem
-private Semi ::= ';'
+private semi ::= ';'
 
-Initializer ::= FLOAT_LITERAL
-              | INT_LITERAL
-              | UINT_LITERAL
-              | DOUBLE_LITERAL
+//initializer ::= expression
 
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-Module ::= (MODULE_KW identifier Semi)? Imports ModuleContents {
+module ::= (MODULE_KW identifier semi)? imports moduleContents {
     pin=1
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
     methods = [ nameIdentifier="identifier" ]
 }
 
-ModuleContents ::= Item*
-Imports ::= Import*
-private ImportRecover ::= !(Item)
-Import ::= IMPORT_KW PathImpl Semi { pin=1 }
+moduleContents ::= item*
+imports ::= import*
+private importRecover ::= !(item)
+import ::= IMPORT_KW pathImpl semi { pin=1 }
 
 //====================================================================
-Attribute ::= '@' PathImpl ('(' ')')?
-private AttributeList ::= Attribute*
+attribute ::= '@' pathImpl ('(' ')')?
+private attributeList ::= attribute*
 
 //====================================================================
 // ITEMS
-private Item ::= (Constant
-                | Component
-                | Uniform
-                | Function)
+private item ::= (variable
+                | component
+                | function)
 
 //====================================================================
 // PATHS
 //fake Path ::= (Path '.' )? identifier
-Path ::= identifier {
+path ::= identifier {
     mixin = "patapon.rendergraph.lang.psi.impl.RgPathImplMixin"
 }
 
-left PathSegment ::= '.' identifier { elementType ="Path"}
-PathImpl ::= Path PathSegment* {
-    elementType ="Path"
+left pathSegment ::= '.' identifier { elementType ="Path"}
+pathImpl ::= path pathSegment* {
+    elementType ="path"
 }
 
 //====================================================================
-Type ::= Path
-Qualifier ::= 'in' | 'out' | 'inout'
+type ::= path
 
 //====================================================================
-Constant ::=  AttributeList const val identifier (':' Type)? ('=' Initializer)? Semi {
-    pin=2
-    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
-    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
-    methods = [ nameIdentifier="identifier" ]
-}
+qualifier ::= const | UNIFORM_KW
 
-//====================================================================
-Uniform ::= AttributeList UNIFORM_KW val identifier (':' Type)? ('=' Initializer)? Semi {
-    pin=2
-    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
-    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
-    methods = [ nameIdentifier="identifier" ]
-}
-
-//====================================================================
-private ParamRecover ::= !(')' | Semi)
-PrimitiveTopology ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=ParamRecover}
-PrimitiveTopologyItem ::= 'primitive_topology' '(' PrimitiveTopology ')' Semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-VertexShaderItem ::= 'vertex' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-FragmentShaderItem ::= 'fragment' '(' PathImpl ')' Semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-GeometryShaderItem ::= 'geometry' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-TessControlShaderItem ::= 'tess_control' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-TessEvalShaderItem ::= 'tess_eval' '(' PathImpl ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-DepthTestItem ::= 'depth_test' '(' bool_literal ')' Semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
-
-//====================================================================
-private ArglistRecover ::= !(')' | ',')
-
-Parameter ::= AttributeList Qualifier? identifier ':' Type {
+variable ::= attributeList qualifier? val identifier (':' type)? ('=' expression)? semi {
     pin=3
-    recoverWhile=ArglistRecover
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
     methods = [ nameIdentifier="identifier" ]
 }
 
-private ParameterList ::= Parameter (',' Parameter)*
 
-Function ::= AttributeList fun identifier '(' ParameterList? ')' (':' Type)? (FunctionBody | Semi) {
+//====================================================================
+/*private paramRecover ::= !(')' | semi)
+private primitiveTopologyChoices ::= 'point' | 'line' | 'triangle' {pin=".*" recoverWhile=paramRecover}
+primitiveTopology ::= 'primitive_topology' '(' primitiveTopology ')' semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+vertexShader ::= 'vertex' '(' pathImpl ')' semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+fragmentShader ::= 'fragment' '(' pathImpl ')' semi { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+geometryShader ::= 'geometry' '(' pathImpl ')' semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+tessControlShader ::= 'tess_control' '(' pathImpl ')' semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+tessEvalShader ::= 'tess_eval' '(' pathImpl ')' semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }
+depthTest ::= 'depth_test' '(' bool_literal ')' semi  { pin=2 implements="patapon.rendergraph.lang.psi.ext.RgRenderPassItem" }*/
+
+//====================================================================
+private arglistRecover ::= !(')' | ',')
+
+parameterQualifier ::= 'in' | 'out' | 'inout'
+
+parameter ::= attributeList parameterQualifier? identifier ':' type {
+    pin=3
+    recoverWhile=arglistRecover
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
-    methods = [ returnType="Type" nameIdentifier="identifier" ]
+    methods = [ nameIdentifier="identifier" ]
+}
+
+private parameterList ::= parameter (',' parameter)*
+
+function ::= attributeList fun identifier '(' parameterList? ')' (':' type)? (functionBody | semi) {
+    implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
+    methods = [ returnType="type" nameIdentifier="identifier" ]
 }
 
 //====================================================================
-private ComponentItemRecover ::= !('}' | const | pass | '@' | identifier | fun )
+private memberRecover ::= !('}' | const | '@' | identifier | fun )
 
-private ComponentItem ::= !'}' ( Constant | Function | Pass) {
+private memberDeclaration ::= !'}' ( variable | function ) {
     pin=1
-    recoverWhile=ComponentItemRecover
+    recoverWhile=memberRecover
 }
 
-private ComponentBase ::= PathImpl
+baseComponentList ::= pathImpl (',' pathImpl)*
 
-ComponentBases ::= ComponentBase (',' ComponentBase)*
-
-Component ::= AttributeList COMPONENT_KW identifier (':' ComponentBases)? '{' ComponentItem* '}' {
+component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{' memberDeclaration* '}' {
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
     methods = [ nameIdentifier="identifier" ]
-    //stubClass = "patapon.rendergraph.lang.stubs.RgComponentStub"
-    //elementTypeFactory = "patapon.rendergraph.lang.stubs.StubImplementationsKt.factory"
 }
-
-//====================================================================
-private PassItemRecover ::= !('}' | const | identifier | PASS_KW | '@' | PrimitiveTopology
-                            | 'vertex' | 'fragment' | 'geometry' | 'tess_control' | 'tess_eval' | 'depth_test')
-private PassItem ::= !'}'
-                      ( PrimitiveTopologyItem
-                      | VertexShaderItem
-                      | FragmentShaderItem
-                      | GeometryShaderItem
-                      | TessControlShaderItem
-                      | TessEvalShaderItem
-                      | DepthTestItem
-                      | Constant
-                      | Function
-                      ) { pin=1 recoverWhile=PassItemRecover }
-
-Pass ::= AttributeList PASS_KW identifier? '{' PassItem* '}'
 
 //====================================================================
 // code
-BraceBalancedBlock ::=  ('{' BraceBalancedBlock '}' | << unpairedToken >>)*
+braceBalancedBlock ::=  ('{' braceBalancedBlock '}' | << unpairedToken >>)*
 
-FunctionBody ::= Block | '=' Expression Semi {
-    methods = [ blockBody="Block"; expressionBody="Expression" ]
+functionBody ::= block | '=' expression semi {
+    methods = [ blockBody="block"; expressionBody="expression" ]
 }
 
 //====================================================================
-Block ::= '{' Statement* '}'
+block ::= '{' statement* '}'
 
 //====================================================================
 // statements
-private Statement ::= EmptyStatement | ReturnStatement
+private statement ::= emptyStatement | expression semi
 
-EmptyStatement ::= Semi {
-    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
-}
-
-ReturnStatement ::= return Expression Semi {
-    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
-}
-
-ExpressionStatement ::= Expression Semi {
+emptyStatement ::= semi {
     implements = ["patapon.rendergraph.lang.psi.RgStatement"]
 }
 
 //====================================================================
 // expressions
-Expression ::= identifier
+expression ::= assignment
+  | disjunction
+  | conjunction
+  | equality
+  | relativeComparison
+  | additiveExpression
+  | multiplicativeExpression
+  | prefixExpression
+  | postfixExpression
+  | qualification
+  | atomicExpression
 
+// Operators, sorted from lowest to highest precedence
+private assignOp ::= '|=' | '^=' | '&=' | '=' | '+=' | '-=' | '*=' | '/=' | '%='
+private equalityOp ::= '==' | '!='
+private comparisonOp ::= '<' | '>' | '<=' | '>='
+private additiveOp ::= '+' | '-'
+private multiplicativeOp ::= '*' | '/' | '%'
+private prefixOp ::= '-' | '+' | '--' | '++' | '!'
+private postfixOp ::= '--' | '++'
+
+assignment ::= expression assignOp expression
+{ extends=expression rightAssociative=true }
+
+disjunction ::= expression '||' expression
+{ extends=expression }
+
+conjunction ::= expression '&&' expression
+{ extends=expression }
+
+equality ::= expression equalityOp expression
+{ extends=expression }
+
+relativeComparison::= expression comparisonOp expression
+{ extends=expression }
+
+additiveExpression ::= expression additiveOp expression
+{ extends=expression }
+
+multiplicativeExpression ::= expression multiplicativeOp expression
+{ extends=expression }
+
+prefixExpression ::= prefixOp expression
+{ extends=expression }
+
+postfixExpression ::= expression postfixOp
+{ extends=expression }
+
+qualification ::= expression '.' identifier
+{ extends=expression }
+
+atomicExpression ::= parensExpression
+                   | simpleReferenceExpression
+                   | ifExpression
+                   | returnExpression
+                   | literal
+
+parensExpression ::= '(' expression ')'
+{ extends=expression }
+
+simpleReferenceExpression ::= identifier { extends=expression }
+
+ifExpression ::= if "(" expression ")" expression (else expression)?
+{ extends=expression }
+
+returnExpression ::= return expression
+{ extends=expression }
+
+literal ::= BOOL_LITERAL | INT_LITERAL | UINT_LITERAL | FLOAT_LITERAL | DOUBLE_LITERAL

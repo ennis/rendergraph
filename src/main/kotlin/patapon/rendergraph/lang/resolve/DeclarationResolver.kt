@@ -1,14 +1,10 @@
 package patapon.rendergraph.lang.resolve
 
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.parentOfType
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*
-import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
 
 /*class NameResolver()
@@ -61,7 +57,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
                 result = resolveFunctionDeclaration(o)
             }
             override fun visitConstant(o: RgConstant) {
-                result = resolveConstantDeclaration(o)
+                result = resolveVariableDeclaration(o)
             }*/
             override fun visitModule(o: RgModule) {
                 result = resolveModuleDeclaration(o)
@@ -84,7 +80,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     }
 
     fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
-    fun resolveConstantDeclaration(constant: RgConstant): ConstantDeclaration = resolveConstantDeclaration(null, constant)
+    fun resolveVariableDeclaration(variable: RgVariable): ConstantDeclaration = resolveVariableDeclaration(null, variable)
     fun resolveFunctionDeclaration(function: RgFunction): FunctionDeclaration = resolveFunctionDeclaration(null, function)
 
     fun resolveFunctionDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, function: RgFunction): FunctionDeclaration
@@ -95,11 +91,11 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
         }
     }
 
-    fun resolveConstantDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, constant: RgConstant): ConstantDeclaration
+    fun resolveVariableDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, variable: RgVariable): ConstantDeclaration
     {
-        return bindingContext.constantDeclarations.getOrPut(constant) {
-            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(constant)
-            ConstantDeclarationImpl(owningDeclaration, constant.name ?: UNNAMED_CONSTANT, typeResolver, constant)
+        return bindingContext.constantDeclarations.getOrPut(variable) {
+            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(variable)
+            ConstantDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
         }
     }
 
@@ -120,8 +116,8 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
                     addDeclaration(resolveComponentDeclaration(owningDeclaration, o))
                 }
 
-                override fun visitConstant(o: RgConstant) {
-                    addDeclaration(resolveConstantDeclaration(owningDeclaration, o))
+                override fun visitVariable(o: RgVariable) {
+                    addDeclaration(resolveVariableDeclaration(owningDeclaration, o))
                 }
 
                 override fun visitFunction(o: RgFunction) {
@@ -144,7 +140,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     fun buildComponentMemberResolutionScope(declaration: ComponentDeclaration, component: RgComponent): Scope
     {
         val baseResolutionScope = declaration.resolutionScope
-        component.componentBases?.pathList?.forEach { path ->
+        component.baseComponentList?.pathList?.forEach { path ->
             // query the declaration associated with the base somehow
             // get its 'member scope' attribute
             val result = resolvePath(path, baseResolutionScope)

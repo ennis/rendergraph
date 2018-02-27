@@ -79,7 +79,7 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     true                                    {return BOOL_LITERAL; }
     false                                   {return BOOL_LITERAL; }
     // RenderGraph specific
-    pass                                    {return PASS_KW;}
+    //pass                                    {return PASS_KW;}
     component                               {return COMPONENT_KW;}
     module                                  {return MODULE_KW;}
     import                                  {return IMPORT_KW;}

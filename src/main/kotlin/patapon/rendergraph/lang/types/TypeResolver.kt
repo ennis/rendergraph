@@ -1,27 +1,22 @@
 package patapon.rendergraph.lang.types
 
-import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.declarations.BindingContext
-import patapon.rendergraph.lang.declarations.ConstantDeclaration
 import patapon.rendergraph.lang.declarations.TypeDeclaration
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.Diagnostics
-import patapon.rendergraph.lang.psi.RgParameter
-import patapon.rendergraph.lang.psi.RgConstant
-import patapon.rendergraph.lang.psi.RgFunction
-import patapon.rendergraph.lang.psi.RgType
+import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.resolve.resolvePath
 
 class TypeResolver(val bindingContext: BindingContext, val d: DiagnosticSink)
 {
-    fun checkConstantDeclaration(constant: RgConstant, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
+    fun checkConstantDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
     {
-        // we have a constant decl node, and we want to know its type:
+        // we have a variable decl node, and we want to know its type:
         // if not found, resolve:
         // resolve the type annotation (get a resolution scope)
         //TODO()
-        val typeAnnotation = constant.type
+        val typeAnnotation = variable.type
         if (typeAnnotation != null) {
             return resolveTypeReference(typeAnnotation, declarationResolutionScope)
         }
