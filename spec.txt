@@ -93,4 +93,4 @@ Create a module instance
 
 Minimal viable product:
 	- All GLSL statements and expressions
-	- 
+	-

@@ -105,10 +105,10 @@ module ::= (MODULE_KW identifier semi)? imports moduleContents {
 moduleContents ::= item*
 imports ::= import*
 private importRecover ::= !(item)
-import ::= IMPORT_KW pathImpl semi { pin=1 }
+import ::= IMPORT_KW path semi { pin=1 }
 
 //====================================================================
-attribute ::= '@' pathImpl ('(' ')')?
+attribute ::= '@' path ('(' ')')?
 private attributeList ::= attribute*
 
 //====================================================================
@@ -119,15 +119,8 @@ private item ::= (variable
 
 //====================================================================
 // PATHS
-//fake Path ::= (Path '.' )? identifier
-path ::= identifier {
-    mixin = "patapon.rendergraph.lang.psi.impl.RgPathImplMixin"
-}
 
-left pathSegment ::= '.' identifier { elementType ="Path"}
-pathImpl ::= path pathSegment* {
-    elementType ="path"
-}
+path ::= identifier ('.' identifier)*
 
 //====================================================================
 type ::= path
@@ -183,7 +176,7 @@ private memberDeclaration ::= !'}' ( variable | function ) {
     recoverWhile=memberRecover
 }
 
-baseComponentList ::= pathImpl (',' pathImpl)*
+baseComponentList ::= path (',' path)*
 
 component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{' memberDeclaration* '}' {
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
