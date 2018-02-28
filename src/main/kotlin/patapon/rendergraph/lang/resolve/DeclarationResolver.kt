@@ -80,7 +80,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
     }
 
     fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
-    fun resolveVariableDeclaration(variable: RgVariable): ConstantDeclaration = resolveVariableDeclaration(null, variable)
+    fun resolveVariableDeclaration(variable: RgVariable): VariableDeclaration = resolveVariableDeclaration(null, variable)
     fun resolveFunctionDeclaration(function: RgFunction): FunctionDeclaration = resolveFunctionDeclaration(null, function)
 
     fun resolveFunctionDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, function: RgFunction): FunctionDeclaration
@@ -91,11 +91,11 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
         }
     }
 
-    fun resolveVariableDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, variable: RgVariable): ConstantDeclaration
+    fun resolveVariableDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, variable: RgVariable): VariableDeclaration
     {
-        return bindingContext.constantDeclarations.getOrPut(variable) {
+        return bindingContext.variableDeclarations.getOrPut(variable) {
             val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(variable)
-            ConstantDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
+            VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
         }
     }
 

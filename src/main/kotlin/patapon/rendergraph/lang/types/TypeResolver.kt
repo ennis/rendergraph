@@ -50,7 +50,7 @@ class TypeResolver(val bindingContext: BindingContext, val d: DiagnosticSink)
         }
     }
 
-    //fun checkConstantDeclaration(constant: RgConstant, decl: ConstantDeclaration, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
+    //fun checkConstantDeclaration(constant: RgConstant, decl: VariableDeclaration, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
     //{
     //    TODO()
     //}

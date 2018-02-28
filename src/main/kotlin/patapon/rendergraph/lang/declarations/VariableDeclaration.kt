@@ -4,16 +4,16 @@ import patapon.rendergraph.lang.psi.RgVariable
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
 
-interface ConstantDeclaration: Declaration {
+interface VariableDeclaration : Declaration {
     val type: Type
 }
 
 // the owning declaration is always resolved eagerly
-class ConstantDeclarationImpl(
+class VariableDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
         val typeResolver: TypeResolver,
-        variable: RgVariable) : ConstantDeclaration
+        variable: RgVariable) : VariableDeclaration
 {
     val type_ = Lazy {
         typeResolver.checkConstantDeclaration(
