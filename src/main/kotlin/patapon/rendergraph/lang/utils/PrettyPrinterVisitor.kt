@@ -46,7 +46,7 @@ class PrettyPrinterVisitor(
 
         append("Variable '${o.name}'")
 
-        if (decl != null) { appendln("name '${decl.name}'") }
+        if (decl != null) { appendln(" name '${decl.name}'") }
         else { appendln(" <unresolved>") }
 
     }

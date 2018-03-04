@@ -178,7 +178,7 @@ function ::= attributeList fun identifier '(' parameterList? ')' (':' type)? (fu
 }
 
 //====================================================================
-private memberRecover ::= !('}' | const | '@' | identifier | fun )
+private memberRecover ::= !('}' | const | '@' | identifier | fun | val | UNIFORM_KW )
 
 private memberDeclaration ::= !'}' ( variable | function ) {
     pin=1

@@ -1,15 +1,14 @@
 package patapon.rendergraph.lang.resolve
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import patapon.rendergraph.lang.declarations.BindingContext
-import patapon.rendergraph.lang.declarations.Declaration
-import patapon.rendergraph.lang.declarations.DeclarationWithResolutionScope
-import patapon.rendergraph.lang.declarations.VariableDeclaration
+import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.error
+import patapon.rendergraph.lang.diagnostics.trace
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.utils.memoize
 import patapon.rendergraph.lang.utils.Lazy
@@ -22,7 +21,6 @@ class LazyScope(
         val d: DiagnosticSink
     ): Scope
 {
-
     val decls = memoize(::resolve)
     val allDeclarations_ = Lazy {
         doGetAllDeclarations()
@@ -55,11 +53,13 @@ class LazyScope(
                 }
 
         // now check for name clashes
-        matching.zip(matching).forEach { (a, b) ->
-            if (a != b && a.name == b.name) {
-                // TODO function overloading
-                // CONTEXT(X.XX): redeclaration within the same member scope
-                d.error("Conflicting declarations: ${a.name} and ${b.name}")
+        matching.forEach { a ->
+            matching.forEach { b ->
+                if (a != b && a.name == b.name) {
+                    // TODO function overloading
+                    // CONTEXT(X.XX): redeclaration within the same member scope
+                    d.error("Conflicting declarations: ${a.name} and ${b.name}")
+                }
             }
         }
 
