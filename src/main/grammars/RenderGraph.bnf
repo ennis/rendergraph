@@ -95,11 +95,10 @@ private semi ::= ';'
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-module ::= (MODULE_KW identifier semi)? imports moduleContents {
+module ::= (MODULE_KW path semi)? imports moduleContents {
     pin=1
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
-    mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
-    methods = [ nameIdentifier="identifier" ]
+    mixin = "patapon.rendergraph.lang.psi.impl.RgModuleImplMixin"
 }
 
 moduleContents ::= item*
@@ -119,8 +118,18 @@ private item ::= (variable
 
 //====================================================================
 // PATHS
+path ::= qualifiedPath
+       | pathRoot
 
-path ::= identifier ('.' identifier)*
+qualifiedPath ::= path '.' identifier {
+    extends=path
+    methods=[ left="path" right="identifier" ]
+    rightAssociative=true
+}
+
+pathRoot ::= identifier
+{ extends=path }
+
 
 //====================================================================
 type ::= path
@@ -197,7 +206,7 @@ block ::= '{' statement* '}'
 
 //====================================================================
 // statements
-private statement ::= emptyStatement | expression semi
+private statement ::= emptyStatement | expression semi | variable
 
 emptyStatement ::= semi {
     implements = ["patapon.rendergraph.lang.psi.RgStatement"]
@@ -265,7 +274,8 @@ atomicExpression ::= parensExpression
 parensExpression ::= '(' expression ')'
 { extends=expression }
 
-simpleReferenceExpression ::= identifier { extends=expression }
+simpleReferenceExpression ::= identifier
+{ extends=expression }
 
 ifExpression ::= if "(" expression ")" expression (else expression)?
 { extends=expression }

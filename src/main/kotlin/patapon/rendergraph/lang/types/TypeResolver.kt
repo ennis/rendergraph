@@ -8,7 +8,7 @@ import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.resolve.resolvePath
 
-class TypeResolver(val bindingContext: BindingContext, val d: DiagnosticSink)
+class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
 {
     fun checkConstantDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
     {
@@ -40,6 +40,7 @@ class TypeResolver(val bindingContext: BindingContext, val d: DiagnosticSink)
         else {
             val typeDecl = lookupResult.first() as? TypeDeclaration
             if (typeDecl != null) {
+                context.typeReferences.put(typeRef, typeDecl)
                 return typeDecl.type
             }
             else {
@@ -63,13 +64,10 @@ class TypeResolver(val bindingContext: BindingContext, val d: DiagnosticSink)
         return UnresolvedType
     }
 
-    fun checkFunctionArgumentType(argument: RgParameter, resolutionScope: Scope): Type
+    fun checkFunctionArgumentType(parameter: RgParameter, resolutionScope: Scope): Type
     {
-        // standard type lookup in the scope
-        //TODO()
-        return UnresolvedType
+        return resolveTypeReference(parameter.type!!, resolutionScope)
     }
-
 
 }
 

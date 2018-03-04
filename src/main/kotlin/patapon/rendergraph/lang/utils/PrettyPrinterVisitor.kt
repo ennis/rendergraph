@@ -1,19 +1,22 @@
 package patapon.rendergraph.lang.utils
 
+import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.types.TypeResolver
 
 class PrettyPrinterVisitor(
-        val declarationResolver: DeclarationResolver,
-        val typeResolver: TypeResolver,
-        val outString: StringBuilder): RgVisitor()
+        private val declarationResolver: DeclarationResolver,
+        private val context: BindingContext,
+        private val typeResolver: TypeResolver,
+        private val outString: StringBuilder): RgVisitor()
 {
-    var indent = 0
-    var mustIndent = false
+    private var indent = 0
+    private var mustIndent = false
 
     override fun visitModule(o: RgModule) {
         val decl = declarationResolver.resolveModuleDeclaration(o)
+        decl.members.getAllDeclarations()
         appendln("Module '${o.name}' name '${decl.name}' fqName TODO")
         withIndent {
             o.moduleContents!!.acceptChildren(this)
@@ -25,28 +28,49 @@ class PrettyPrinterVisitor(
     }
 
     override fun visitComponent(o: RgComponent) {
-        val decl = declarationResolver.resolveComponentDeclaration(o)
-        appendln("Component '${o.name}' name '${decl.name}'")
+        val decl = context.componentDeclarations[o]
+
+        append("Component '${o.name}'")
+        decl?.apply { members.getAllDeclarations() }
+
+        if (decl != null) { appendln(" name '${decl.name}'") }
+        else { appendln(" <unresolved>") }
+
         withIndent {
             o.acceptChildren(this)
         }
     }
 
     override fun visitVariable(o: RgVariable) {
-        val decl = declarationResolver.resolveVariableDeclaration(o)
-        appendln("Constant '${o.name}' name '${decl.name}' type ${decl.type}")
+        val decl = context.variableDeclarations[o]
+
+        append("Variable '${o.name}'")
+
+        if (decl != null) { appendln("name '${decl.name}'") }
+        else { appendln(" <unresolved>") }
+
     }
 
     override fun visitFunction(o: RgFunction) {
-        val decl = declarationResolver.resolveFunctionDeclaration(o)
-        appendln("Function '${o.name}' name '${decl.name}' returnType ${decl.returnType}")
+        val decl = context.functionDeclarations[o]
+
+        append("Function '${o.name}'")
+
+        if (decl != null) { appendln(" name '${decl.name}' returnType ${decl.returnType}") }
+        else { appendln(" <unresolved>") }
+
         withIndent {
             o.acceptChildren(this)
         }
     }
 
     override fun visitParameter(o: RgParameter) {
-        appendln("Parameter '${o.name}'")
+        val decl = context.valueParameters[o]
+
+        append("Parameter '${o.name}'")
+
+        if (decl != null) { appendln(" name '${decl.name}' returnType ${decl.type}") }
+        else { appendln(" <unresolved>") }
     }
 
     private fun printIndent()
@@ -76,7 +100,7 @@ class PrettyPrinterVisitor(
         outString.append(str)
     }
 
-    inline fun withIndent(body: () -> Unit)
+    private inline fun withIndent(body: () -> Unit)
     {
         indent++
         body()

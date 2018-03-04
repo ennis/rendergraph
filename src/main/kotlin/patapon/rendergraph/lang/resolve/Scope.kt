@@ -1,15 +1,23 @@
 package patapon.rendergraph.lang.resolve
 
+import patapon.rendergraph.lang.declarations.ComponentDeclaration
 import patapon.rendergraph.lang.declarations.Declaration
-import patapon.rendergraph.lang.declarations.LazyValue
+import patapon.rendergraph.lang.declarations.FunctionDeclaration
+import patapon.rendergraph.lang.declarations.VariableDeclaration
 
 
 interface Scope
 {
     fun getParentScope(): Scope?
     val owningDeclaration: Declaration?
+
     fun getAllDeclarations(): Collection<Declaration>
-    fun findDeclarations(name: String): List<Declaration>
+    fun findDeclarations(name: String): Collection<Declaration>
+
+    //fun getFunctionDeclarations(name: String): Collection<FunctionDeclaration>
+    //fun getVariableDeclarations(name: String): Collection<VariableDeclaration>
+    //fun getComponentDeclarations(name: String): Collection<ComponentDeclaration>
+
 }
 
 interface ScopeBuilder
@@ -36,7 +44,7 @@ class ScopeImpl(
         return symbolTable.values
     }
 
-    override fun findDeclarations(name: String): List<Declaration> {
+    override fun findDeclarations(name: String): Collection<Declaration> {
         // this scope does not support symbols with the same name
         val result = symbolTable.get(name)
         return if (result != null) {

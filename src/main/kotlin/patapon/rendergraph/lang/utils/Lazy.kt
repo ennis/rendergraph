@@ -1,4 +1,4 @@
-package patapon.rendergraph.lang.declarations
+package patapon.rendergraph.lang.utils
 
 interface LazyValue<out T>
 {

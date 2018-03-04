@@ -5,6 +5,7 @@ import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.utils.Lazy
 
 
 interface FunctionDeclaration: DeclarationWithResolutionScope

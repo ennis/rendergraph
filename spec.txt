@@ -91,6 +91,64 @@ Create a module instance
 - Lazy scopes:
 	- 
 
-Minimal viable product:
-	- All GLSL statements and expressions
-	-
+Module specification:
+- the module name is a path
+- the compiler recursively finds all source files in the source root
+- each file is implicitly a module
+- `module A.B.C` will create the scopes for modules A, A.B, and A.B.C
+- declarations in a parent module are automatically visible to all submodules
+
+
+module A.B.C;
+
+component AA: Base 
+{}
+
+module A
+module A.B  // error, A previously seen as leaf
+
+module A.B              // A is package, B is leaf
+private module A.B      //
+
+get decl AA
+  create decl AA
+  	get parent decl
+  	  get module A.B.C
+  	    get module A.B 
+  	      get module A (look in root scope)
+  	        create module A
+  	      look for module B in A ???
+  	      	not found -> add to scope
+  	      	otherwise: get, error if not package
+  	      	introduce lazy scopes: create elements on demand, doesn't know all the elements in advance
+  	      	(we don't want to fill a package scope since we need to traverse all files to get all elements of the scope)
+  	    look for module C in B
+  	      not found -> create module C, add to scope
+  	      found -> error: module redefinition
+  	    return C
+
+
+- rust engine:
+	- load shader from JSON
+	- static interface checking
+	- query variant
+
+
+trait ShaderInterface
+	derived with proc macro
+
+struct RenderPass
+// verify the renderPass against the provided ShaderInterface
+// do it once at the beginning of the program
+fn RenderPass::verify<T: ShaderInterface>(): impl TypedRenderPass<T>
+
+// draw:
+
+fn draw<T: ShaderInterface>(
+	renderPass: &TypedRenderPass<T>,
+	params: T,
+	dynamicParams: DynamicParams
+)
+
+// Dynamic params:
+// add uniform by name, etc.

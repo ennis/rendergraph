@@ -52,7 +52,7 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
         val typeResolver = TypeResolver(bindingContext, diagnosticSink)
         val declarationResolver = DeclarationResolver(bindingContext, typeResolver, diagnosticSink)
         val ppBuffer = StringBuilder()
-        val prettyPrinter = PrettyPrinterVisitor(declarationResolver, typeResolver, ppBuffer)
+        val prettyPrinter = PrettyPrinterVisitor(declarationResolver, bindingContext, typeResolver, ppBuffer)
         file.acceptChildren(prettyPrinter)
         LOG.info(ppBuffer.toString())
     }

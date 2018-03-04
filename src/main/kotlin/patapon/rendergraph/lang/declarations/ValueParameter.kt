@@ -3,16 +3,17 @@ package patapon.rendergraph.lang.declarations
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
 import patapon.rendergraph.lang.psi.RgParameter
+import patapon.rendergraph.lang.utils.Lazy
 
-class ParameterDeclaration(
+class ValueParameter(
         override val owningDeclaration: FunctionDeclaration,
         override val name: String,
         val index: Int,
         val typeResolver: TypeResolver,
-        argument: RgParameter): ValueDeclaration
+        parameter: RgParameter): ValueDeclaration
 {
-    val type_ = Lazy<Type> {
-        typeResolver.checkFunctionArgumentType(argument, owningDeclaration.argumentResolutionScope)
+    val type_ = Lazy {
+        typeResolver.checkFunctionArgumentType(parameter, owningDeclaration.argumentResolutionScope)
     }
 
     override val type: Type

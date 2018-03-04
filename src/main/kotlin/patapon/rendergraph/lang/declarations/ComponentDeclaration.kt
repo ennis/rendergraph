@@ -1,41 +1,62 @@
 package patapon.rendergraph.lang.declarations
 
 import com.intellij.openapi.diagnostic.Logger
-import patapon.rendergraph.lang.resolve.ScopeImpl
+import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.RgComponent
 import patapon.rendergraph.lang.resolve.DeclarationResolver
+import patapon.rendergraph.lang.resolve.LazyScope
 import patapon.rendergraph.lang.resolve.Scope
+import patapon.rendergraph.lang.utils.Lazy
+
 
 interface ComponentDeclaration: DeclarationWithResolutionScope
 {
     // the scope used to resolve the members of the components
     // includes declarations of the base class
     // val memberResolutionScope: Scope
+
+    //
+    // component A {
+    //      fun f
+    // }
+    //
+    // component B: A {
+    //      fun g
+    // }
+    //
+    // A.inheritanceScope = { }
+    // B.inheritanceScope = { f }
+    // A.members = { f }
+    // B.members = { g }
+    // A.resolutionScope = { <lexical scope>, f }
+    // B.resolutionScope = { <lexical scope>, f, g }
+
+    // scope of all inherited declarations
+    val inheritanceScope: Scope
+    // scope of all members (without inherited declarations)
     val members: Scope
 }
 
 class ComponentDeclarationImpl(
         override val owningDeclaration: Declaration,
         override val name: String,
-        val declarationResolver: DeclarationResolver,
-        component: RgComponent
+        declarationResolver: DeclarationResolver,
+        component: RgComponent,
+        d: DiagnosticSink
     ): ComponentDeclaration
 {
     companion object {
         var LOG = Logger.getInstance(ComponentDeclarationImpl::class.java)
     }
 
-    // A scope provides 'Declarations' on demand
-    // when a name is queried, the AST is visited
+    override val inheritanceScope: Scope
+        get() = TODO("not implemented")
+
     override val resolutionScope: Scope
         get() = TODO("compute the member resolution scope")
 
-    override val members: Scope
-        get() = members_.value
+    override val members = LazyScope(this, component, declarationResolver, d)
 
-    val members_ = Lazy {
-        declarationResolver.resolveMemberScope(this, component)
-    }
 }
 
 

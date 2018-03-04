@@ -3,6 +3,7 @@ package patapon.rendergraph.lang.declarations
 import patapon.rendergraph.lang.psi.RgVariable
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.utils.Lazy
 
 interface VariableDeclaration : Declaration {
     val type: Type

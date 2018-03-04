@@ -1,9 +1,11 @@
 package patapon.rendergraph.lang.resolve
 
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.util.PsiTreeUtil
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
+import patapon.rendergraph.lang.diagnostics.error
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.types.TypeResolver
 
@@ -42,89 +44,67 @@ fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration>
     return scope.findDeclarations(path.toString())
 }
 
+//fun resolveAbsoluteModulePath(path: RgPath, rootScope: Scope): ModuleDeclaration
+//{
+//}
 
 // Responsible for resolving the contents of declarations with resolution scopes (components, functions, constants with initializers...)
-class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: TypeResolver, val d: DiagnosticSink): RgVisitor()
+class DeclarationResolver(val context: BindingContext, val typeResolver: TypeResolver, val d: DiagnosticSink): RgVisitor()
 {
-    fun resolveDeclarationWithResolutionScope(decl: RgDeclaration): DeclarationWithResolutionScope
-    {
-        var result: DeclarationWithResolutionScope? = null
-        decl.accept(object : RgVisitor() {
-            override fun visitComponent(o: RgComponent) {
-                result = resolveComponentDeclaration(o)
-            }
-            /*override fun visitFunction(o: RgFunction) {
-                result = resolveFunctionDeclaration(o)
-            }
-            override fun visitConstant(o: RgConstant) {
-                result = resolveVariableDeclaration(o)
-            }*/
-            override fun visitModule(o: RgModule) {
-                result = resolveModuleDeclaration(o)
-            }
-        })
 
-        return result!!
-    }
+
+    /*fun resolveModulePath(path: RgPath, scope: Scope): ModuleDeclaration
+    {
+        // first, resolve parent module
+        PsiTreeUtil.findChildrenOfType(path, PsiIdentifier::class.java).toTypedArray().dropLast(1)
+    }*/
 
     fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration
     {
-        return bindingContext.moduleDeclarations.getOrPut(mod) {
-            ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, this, mod)
+        return context.moduleDeclarations.getOrPut(mod) {
+            ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, this, mod, d)
         }
     }
 
-    fun getParentDeclaration(decl: RgDeclaration): DeclarationWithResolutionScope
-    {
-        return resolveDeclarationWithResolutionScope(PsiTreeUtil.getParentOfType(decl, RgDeclaration::class.java)!!)
-    }
+    //fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
+    //fun resolveVariableDeclaration(variable: RgVariable): VariableDeclaration = resolveVariableDeclaration(null, variable)
 
-    fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
-    fun resolveVariableDeclaration(variable: RgVariable): VariableDeclaration = resolveVariableDeclaration(null, variable)
-    fun resolveFunctionDeclaration(function: RgFunction): FunctionDeclaration = resolveFunctionDeclaration(null, function)
-
-    fun resolveFunctionDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, function: RgFunction): FunctionDeclaration
+    fun resolveFunctionDeclaration(
+            function: RgFunction,
+            owningDeclaration: DeclarationWithResolutionScope,
+            resolutionScope: Scope): FunctionDeclaration
     {
-        return bindingContext.functionDeclarations.getOrPut(function) {
-            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(function)
-            FunctionDeclarationImpl(owningDeclaration, function.name ?: UNNAMED_FUNCTION, this, typeResolver, function)
-        }
-    }
+        val name = function.name
+        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, this, typeResolver, function)
 
-    fun resolveVariableDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, variable: RgVariable): VariableDeclaration
-    {
-        return bindingContext.variableDeclarations.getOrPut(variable) {
-            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(variable)
-            VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
-        }
-    }
-
-    fun resolveComponentDeclaration(owningDeclarationOrNull: DeclarationWithResolutionScope?, component: RgComponent): ComponentDeclaration
-    {
-        return bindingContext.componentDeclarations.getOrPut(component) {
-            val owningDeclaration = owningDeclarationOrNull ?: getParentDeclaration(component)
-            ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component)
-        }
-    }
-
-    // Called when a member scope needs to be filled with declarations from the PSI tree
-    fun resolveMemberScope(owningDeclaration: DeclarationWithResolutionScope, parent: PsiElement): Scope
-    {
-        return ScopeImpl(null, owningDeclaration) {
-            parent.acceptChildren(object : RgVisitor() {
-                override fun visitComponent(o: RgComponent) {
-                    addDeclaration(resolveComponentDeclaration(owningDeclaration, o))
+        /*if (owningDeclaration is ComponentDeclaration) {
+            val inheritanceScope = owningDeclaration.inheritanceScope
+            if (name != null) {
+                val potentialOverrides = inheritanceScope.findDeclarations(name)
+                potentialOverrides.forEach { decl ->
+                    // TODO handle overrides
+                    d.error("declaration ${name} in component ${owningDeclaration.name} " +
+                            "shadows ${decl.name} in base component ${decl.owningDeclaration?.name ?: UNNAMED_COMPONENT}")
                 }
+            }
+        }*/
 
-                override fun visitVariable(o: RgVariable) {
-                    addDeclaration(resolveVariableDeclaration(owningDeclaration, o))
-                }
+        context.functionDeclarations.put(function, decl)
+        return decl
+    }
 
-                override fun visitFunction(o: RgFunction) {
-                    addDeclaration(resolveFunctionDeclaration(owningDeclaration, o))
-                }
-            })
-        }
+    fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope): VariableDeclaration
+    {
+        val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
+        context.variableDeclarations.put(variable, decl)
+        return decl
+    }
+
+    fun resolveComponentDeclaration(component: RgComponent, owningDeclaration: DeclarationWithResolutionScope): ComponentDeclaration
+    {
+        val decl = ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component, d)
+        context.componentDeclarations.put(component, decl)
+        return decl
     }
 
     // Called when a function needs a scope for its body
@@ -143,7 +123,7 @@ class DeclarationResolver(val bindingContext: BindingContext, val typeResolver: 
         component.baseComponentList?.pathList?.forEach { path ->
             // query the declaration associated with the base somehow
             // get its 'member scope' attribute
-            val result = resolvePath(path, baseResolutionScope)
+            //val result = resolvePath(path, baseResolutionScope)
             //
 
         }
