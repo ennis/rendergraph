@@ -58,9 +58,10 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
 
     fun checkFunctionReturnType(function: RgFunction, declarationResolutionScope: Scope, bodyResolutionScope: Scope): Type
     {
-        // if the type is specified, look it up in the scope
-        // otherwise, infer it from the expression body
-        // TODO()
+        val returnType = function.returnType
+        if (returnType != null) {
+            return resolveTypeReference(returnType, declarationResolutionScope)
+        }
         return UnresolvedType
     }
 
