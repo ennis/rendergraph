@@ -1,5 +1,6 @@
 package patapon.rendergraph.lang.types
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.IntType
 import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.declarations.TypeDeclaration
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
@@ -86,6 +87,31 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         }
     }
 
+    fun checkLiteralExpr(lit: RgLiteral): Type
+    {
+        val type = when (lit)
+        {
+            is RgFloatLiteral -> FloatType
+            is RgIntLiteral -> IntegerType
+            is RgDoubleLiteral -> DoubleType
+            is RgBoolLiteral -> BooleanType
+            is RgUintLiteral -> IntegerType
+            else -> throw IllegalStateException("unsupported literal type")
+        }
+        context.expressionTypes.put(lit,type)
+        return type
+    }
+
+    fun checkReturnExpr(expr: RgReturnExpression): NothingType
+    {
+        // typecheck the return value
+        val returnValueExpr = expr.expression
+        if (returnValueExpr != null)
+            checkExpression(returnValueExpr)
+        context.expressionTypes.put(expr, NothingType)
+        return NothingType
+    }
+
     fun checkEqualityExprTypes(op: Operator, tyLeft: Type, tyRight: Type): Type
     {
         val sameTypes = compareTypes(tyLeft, tyRight)
@@ -132,14 +158,17 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
             Operator.GTEQ -> TODO()
         }
 
+        context.expressionTypes.put(expr, tyResult)
         return tyResult
     }
 
-    fun checkExpression(expression: RgExpression): Type
+    fun checkExpression(expr: RgExpression): Type
     {
-        return when (expression)
+        return when (expr)
         {
-            is RgBinaryExpression -> checkBinaryExpression(expression)
+            is RgBinaryExpression -> checkBinaryExpression(expr)
+            is RgReturnExpression -> checkReturnExpr(expr)
+            is RgLiteral -> checkLiteralExpr(expr)
             else -> TODO()
         }
     }

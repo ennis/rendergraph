@@ -76,8 +76,11 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
 <INITIAL> {
 
     // Boolean literals
-    true                                    {return BOOL_LITERAL; }
-    false                                   {return BOOL_LITERAL; }
+    true                                    {return TK_BOOL_LITERAL; }
+    false                                   {return TK_BOOL_LITERAL; }
+    // Keywords
+    if                                      {return IF;}
+    else                                    {return ELSE;}
     // RenderGraph specific
     //pass                                    {return PASS_KW;}
     component                               {return COMPONENT_KW;}
@@ -134,10 +137,10 @@ EXPONENT_PART       = [Ee]["+""-"]?({DIGIT})*
     // Identifier
     {IDENTIFIER}                            { return IDENTIFIER; }
     // Literals
-    {INT_LITERAL}{UINT_SUFFIX}              {return UINT_LITERAL; }
-    {INT_LITERAL}                           {return INT_LITERAL; }
-    {FLOAT_LITERAL}{DOUBLE_SUFFIX}          {return DOUBLE_LITERAL; }
-    {FLOAT_LITERAL}{FLOAT_SUFFIX}?          {return FLOAT_LITERAL; }
+    {INT_LITERAL}{UINT_SUFFIX}              {return TK_UINT_LITERAL; }
+    {INT_LITERAL}                           {return TK_INT_LITERAL; }
+    {FLOAT_LITERAL}{DOUBLE_SUFFIX}          {return TK_DOUBLE_LITERAL; }
+    {FLOAT_LITERAL}{FLOAT_SUFFIX}?          {return TK_FLOAT_LITERAL; }
     {LINE_WS}                               {return WHITE_SPACE; }
     {EOL_WS}                                {return EOL;}
 }

@@ -44,7 +44,26 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
     {
         val diagnosticSink = object : DiagnosticSink {
             override fun report(diag: Diagnostic) {
-                LOG.info("compilation diag: " + diag.message)
+                val psiElement = diag.psiElement
+                data class LineAndColumn(val line: Int, val col: Int)
+                var startPos: LineAndColumn? = null
+                var endPos: LineAndColumn? = null
+                if (psiElement != null) {
+                    val textRange = psiElement.textRange
+                    val document = psiElement.containingFile.viewProvider.document
+                    if (document != null) {
+                        val startLine = document.getLineNumber(textRange.startOffset)
+                        val startCol = textRange.startOffset - document.getLineStartOffset(startLine)
+                        val endLine = document.getLineNumber(textRange.endOffset)
+                        val endCol = textRange.endOffset - document.getLineStartOffset(endLine)
+                        startPos = LineAndColumn(startLine,startCol)
+                        endPos = LineAndColumn(endLine,endCol)
+                    }
+                    //psiElement.containingFile.
+                }
+                val startPosStr = if (startPos != null) { "${startPos.line},${startPos.col}" } else { "<unknown loc>" }
+                val endPosStr = if (endPos != null) { "${endPos.line},${endPos.col}" } else { "<unknown loc>" }
+                LOG.info("compilation diag ($startPosStr:$endPosStr): " + diag.message)
             }
         }
 
