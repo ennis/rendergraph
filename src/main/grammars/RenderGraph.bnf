@@ -226,35 +226,36 @@ expression ::= assignment
   | qualification
   | atomicExpression
 
+
 // Operators, sorted from lowest to highest precedence
-private assignOp ::= '|=' | '^=' | '&=' | '=' | '+=' | '-=' | '*=' | '/=' | '%='
-private equalityOp ::= '==' | '!='
-private comparisonOp ::= '<' | '>' | '<=' | '>='
-private additiveOp ::= '+' | '-'
-private multiplicativeOp ::= '*' | '/' | '%'
-private prefixOp ::= '-' | '+' | '--' | '++' | '!'
-private postfixOp ::= '--' | '++'
+assignOp ::= '|=' | '^=' | '&=' | '=' | '+=' | '-=' | '*=' | '/=' | '%=' { elementType=binaryOp }
+equalityOp ::= '==' | '!=' { elementType=binaryOp }
+comparisonOp ::= '<' | '>' | '<=' | '>=' { elementType=binaryOp }
+additiveOp ::= '+' | '-' { elementType=binaryOp }
+multiplicativeOp ::= '*' | '/' | '%' { elementType=binaryOp }
+prefixOp ::= '-' | '+' | '--' | '++' | '!'
+postfixOp ::= '--' | '++'
 
 assignment ::= expression assignOp expression
 { extends=expression rightAssociative=true }
 
 disjunction ::= expression '||' expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 conjunction ::= expression '&&' expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 equality ::= expression equalityOp expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 relativeComparison::= expression comparisonOp expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 additiveExpression ::= expression additiveOp expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 multiplicativeExpression ::= expression multiplicativeOp expression
-{ extends=expression }
+{ extends=expression elementType=binaryExpression }
 
 prefixExpression ::= prefixOp expression
 { extends=expression }
@@ -284,3 +285,13 @@ returnExpression ::= return expression
 { extends=expression }
 
 literal ::= BOOL_LITERAL | INT_LITERAL | UINT_LITERAL | FLOAT_LITERAL | DOUBLE_LITERAL
+
+// Fake rule to simplify the processing of binary expressions
+fake binaryOp ::=  /*assignOp*/ '|=' | '^=' | '&=' | '=' | '+=' | '-=' | '*=' | '/=' | '%='
+                   /*equalityOp*/ | '==' | '!='
+                   /*comparisonOp*/ | '<' | '>' | '<=' | '>='
+                   /*additiveOp*/ | '+' | '-'
+                   /*multiplicativeOp*/ | '*' | '/' | '%'
+                   /*conjunction & disjunction*/ | '||' | '&&'
+fake binaryExpression ::= expression binaryOp expression
+{ extends=expression methods= [left="/expression[0]" right="/expression[1]"] }

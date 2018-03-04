@@ -1,10 +1,7 @@
 package patapon.rendergraph.lang.declarations
 
 import patapon.rendergraph.lang.resolve.Scope
-import patapon.rendergraph.lang.types.DoubleTypeDeclaration
-import patapon.rendergraph.lang.types.FloatTypeDeclaration
-import patapon.rendergraph.lang.types.IntegerTypeDeclaration
-import patapon.rendergraph.lang.types.UnitTypeDeclaration
+import patapon.rendergraph.lang.types.*
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
 object PrimitiveScope: Scope {
@@ -24,6 +21,7 @@ object PrimitiveScope: Scope {
             IntegerTypeDeclaration.name to IntegerTypeDeclaration,
             FloatTypeDeclaration.name to FloatTypeDeclaration,
             DoubleTypeDeclaration.name to DoubleTypeDeclaration,
-            UnitTypeDeclaration.name to UnitTypeDeclaration
+            UnitTypeDeclaration.name to UnitTypeDeclaration,
+            BooleanTypeDeclaration.name to BooleanTypeDeclaration
     )
 }

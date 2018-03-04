@@ -4,9 +4,13 @@ import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.declarations.TypeDeclaration
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.Diagnostics
+import patapon.rendergraph.lang.diagnostics.error
 import patapon.rendergraph.lang.psi.*
+import patapon.rendergraph.lang.psi.ext.Operator
+import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.resolve.resolvePath
+import kotlin.math.exp
 
 class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
 {
@@ -68,6 +72,76 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
     fun checkFunctionArgumentType(parameter: RgParameter, resolutionScope: Scope): Type
     {
         return resolveTypeReference(parameter.type!!, resolutionScope)
+    }
+
+    fun compareTypes(typeA: Type, typeB: Type): Boolean
+    {
+        // same instance: this works if both typeA and typeB are primitive types without qualifiers
+        if (typeA == typeB) {
+            return true
+        }
+        else {
+            // TODO: more complex type checking
+            return false
+        }
+    }
+
+    fun checkEqualityExprTypes(op: Operator, tyLeft: Type, tyRight: Type): Type
+    {
+        val sameTypes = compareTypes(tyLeft, tyRight)
+        if (!sameTypes) {
+            d.error("Wrong operand types to ${op}: the two subexpressions do not have the same type")
+        }
+        return BooleanType
+    }
+
+    fun checkBinaryExpression(expr: RgBinaryExpression): Type
+    {
+        // TYPECHECK: left and right subexpressions must have the same types
+        val op = expr.opType
+        val tyLeft = checkExpression(expr.left)
+        val tyRight = checkExpression(expr.right!!)
+
+        val tyResult = when (op)
+        {
+            Operator.ADD -> TODO()
+            Operator.SUB -> TODO()
+            Operator.MUL -> TODO()
+            Operator.DIV -> TODO()
+            Operator.REM -> TODO()
+            Operator.BIT_AND -> TODO()
+            Operator.BIT_OR -> TODO()
+            Operator.BIT_XOR -> TODO()
+            Operator.SHL -> TODO()
+            Operator.SHR -> TODO()
+            Operator.ADD_ASSIGN -> TODO()
+            Operator.SUB_ASSIGN -> TODO()
+            Operator.MUL_ASSIGN -> TODO()
+            Operator.DIV_ASSIGN -> TODO()
+            Operator.REM_ASSIGN -> TODO()
+            Operator.BIT_AND_ASSIGN -> TODO()
+            Operator.BIT_OR_ASSIGN -> TODO()
+            Operator.BIT_XOR_ASSIGN -> TODO()
+            Operator.SHL_ASSIGN -> TODO()
+            Operator.SHR_ASSIGN -> TODO()
+            Operator.EQ -> checkEqualityExprTypes(op,tyLeft,tyRight)
+            Operator.NOT_EQ -> checkEqualityExprTypes(op,tyLeft,tyRight)
+            Operator.LT -> TODO()
+            Operator.LTEQ -> TODO()
+            Operator.GT -> TODO()
+            Operator.GTEQ -> TODO()
+        }
+
+        return tyResult
+    }
+
+    fun checkExpression(expression: RgExpression): Type
+    {
+        return when (expression)
+        {
+            is RgBinaryExpression -> checkBinaryExpression(expression)
+            else -> TODO()
+        }
     }
 
 }
