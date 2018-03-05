@@ -8,7 +8,7 @@ open class DiagnosticFactory(val severity: Severity, val messageFormat: String)
     fun createAt(psiElement: PsiElement?, vararg arguments: Any): Diagnostic {
         return object : Diagnostic {
             override val severity = this@DiagnosticFactory.severity
-            override val message: String = MessageFormat.format(messageFormat, arguments)
+            override val message: String = MessageFormat.format(messageFormat, *arguments)
             override val psiElement = psiElement
         }
     }

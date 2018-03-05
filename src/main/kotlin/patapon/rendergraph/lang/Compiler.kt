@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
+import patapon.rendergraph.lang.codegen.GLSLGenerator
 import patapon.rendergraph.lang.declarations.BindingContextImpl
 import patapon.rendergraph.lang.diagnostics.Diagnostic
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
@@ -12,6 +13,7 @@ import patapon.rendergraph.lang.utils.PrettyPrinterVisitor
 import patapon.rendergraph.lang.psi.RgFile
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.utils.Printer
 
 // Compiler parameters
 data class CompilerArguments(val sourceDirectory: String, val outputLibraryFile: String)
@@ -73,7 +75,11 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
         val ppBuffer = StringBuilder()
         val prettyPrinter = PrettyPrinterVisitor(declarationResolver, bindingContext, typeResolver, ppBuffer)
         file.acceptChildren(prettyPrinter)
-        LOG.info(ppBuffer.toString())
+        val glslBuffer = StringBuilder()
+        val glslGenerator = GLSLGenerator(bindingContext, Printer(glslBuffer))
+        file.acceptChildren(glslGenerator)
+        LOG.info("=== AST ===\n" + ppBuffer.toString())
+        LOG.info("=== GLSL ===\n" + glslBuffer.toString())
     }
 
     fun compile() {
