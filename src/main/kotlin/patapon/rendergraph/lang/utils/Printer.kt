@@ -6,7 +6,7 @@ class Printer(private val outString: StringBuilder) {
 
     private fun printIndent()
     {
-        for (i in 0..indent*2) {
+        for (i in 0 until indent*2) {
             outString.append(' ')
         }
     }

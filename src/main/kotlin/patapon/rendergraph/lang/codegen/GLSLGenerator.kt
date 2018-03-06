@@ -1,7 +1,10 @@
 package patapon.rendergraph.lang.codegen
 
+import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.psi.*
+import patapon.rendergraph.lang.psi.ext.Operator
+import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.utils.Printer
 
 class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
@@ -48,9 +51,58 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
         p.appendln()
     }
 
+    fun genBinaryExpr(expr: RgBinaryExpression)
+    {
+        when (expr.opType)
+        {
+            Operator.ADD -> { genExpr(expr.left); p.append(" + "); genExpr(expr.right!!); }
+            Operator.SUB -> { genExpr(expr.left); p.append(" - "); genExpr(expr.right!!); }
+            Operator.MUL -> { genExpr(expr.left); p.append(" * "); genExpr(expr.right!!); }
+            Operator.DIV -> { genExpr(expr.left); p.append(" / "); genExpr(expr.right!!); }
+            Operator.REM -> { genExpr(expr.left); p.append(" % "); genExpr(expr.right!!); }
+            Operator.BIT_AND -> { genExpr(expr.left); p.append(" & "); genExpr(expr.right!!); }
+            Operator.BIT_OR -> { genExpr(expr.left); p.append(" | "); genExpr(expr.right!!); }
+            Operator.BIT_XOR -> { genExpr(expr.left); p.append(" ^ "); genExpr(expr.right!!); }
+            Operator.SHL -> { genExpr(expr.left); p.append(" << "); genExpr(expr.right!!); }
+            Operator.SHR -> { genExpr(expr.left); p.append(" >> "); genExpr(expr.right!!); }
+            Operator.ADD_ASSIGN -> { genExpr(expr.left); p.append(" += "); genExpr(expr.right!!); }
+            Operator.SUB_ASSIGN -> { genExpr(expr.left); p.append(" -= "); genExpr(expr.right!!); }
+            Operator.MUL_ASSIGN -> { genExpr(expr.left); p.append(" *= "); genExpr(expr.right!!); }
+            Operator.DIV_ASSIGN -> { genExpr(expr.left); p.append(" /= "); genExpr(expr.right!!); }
+            Operator.REM_ASSIGN -> { genExpr(expr.left); p.append(" %= "); genExpr(expr.right!!); }
+            Operator.BIT_AND_ASSIGN -> { genExpr(expr.left); p.append(" &= "); genExpr(expr.right!!); }
+            Operator.BIT_OR_ASSIGN -> { genExpr(expr.left); p.append(" |= "); genExpr(expr.right!!); }
+            Operator.BIT_XOR_ASSIGN -> { genExpr(expr.left); p.append(" ^= "); genExpr(expr.right!!); }
+            Operator.SHL_ASSIGN -> { genExpr(expr.left); p.append(" <<= "); genExpr(expr.right!!); }
+            Operator.SHR_ASSIGN -> { genExpr(expr.left); p.append(" >>= "); genExpr(expr.right!!); }
+            Operator.EQ -> { genExpr(expr.left); p.append(" == "); genExpr(expr.right!!); }
+            Operator.NOT_EQ -> { genExpr(expr.left); p.append(" != "); genExpr(expr.right!!); }
+            Operator.LT -> { genExpr(expr.left); p.append(" < "); genExpr(expr.right!!); }
+            Operator.LTEQ -> { genExpr(expr.left); p.append(" <= "); genExpr(expr.right!!); }
+            Operator.GT -> { genExpr(expr.left); p.append(" > "); genExpr(expr.right!!); }
+            Operator.GTEQ -> { genExpr(expr.left); p.append(" >= "); genExpr(expr.right!!); }
+        }
+    }
+
+    private fun genIdentifier(identifier: PsiElement)
+    {
+        p.append(identifier.text);
+    }
+
+    private fun genLiteral(lit: RgLiteral)
+    {
+        p.append(lit.text)
+    }
+
     private fun genExpr(expr: RgExpression)
     {
-        // TODO
+        when (expr)
+        {
+            is RgBinaryExpression -> genBinaryExpr(expr)
+            is RgParensExpression -> { p.append("("); genExpr(expr.expression!!); p.append(")") }
+            is RgReturnExpression -> genReturn(expr.expression!!)
+            is RgSimpleReferenceExpression -> genIdentifier(expr.identifier)
+        }
     }
 
     private fun genReturn(retExpr: RgExpression)
@@ -60,7 +112,20 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
         p.append(";")
     }
 
-    inner class BlockGenerator: RgVisitor()
+    private fun genLocalVar(o: RgVariable)
+    {
+        val decl = context.variableDeclarations[o]
+        val typeGlsl = decl?.type?.toString()
+        val nameGlsl = decl?.name
+
+        p.appendln("$typeGlsl $nameGlsl");
+        if (o.initializer != null) {
+            p.appendln(" = ")
+            genExpr(o.initializer!!)
+        }
+    }
+
+    private inner class BlockGenerator: RgVisitor()
     {
         override fun visitEmptyStatement(o: RgEmptyStatement) {
             // nothing
@@ -68,6 +133,11 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
 
         override fun visitExpression(o: RgExpression) {
             genExpr(o)
+            p.appendln(";")
+        }
+
+        override fun visitVariable(o: RgVariable) {
+            genLocalVar(o);
         }
     }
 
