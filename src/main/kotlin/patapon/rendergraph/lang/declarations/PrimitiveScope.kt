@@ -5,6 +5,8 @@ import patapon.rendergraph.lang.types.*
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
 object PrimitiveScope: Scope {
+    class PrimitiveTypeDeclaration(override val type: Type, override val name: String): TypeDeclaration
+
     override val owningDeclaration = null
     override fun getParentScope() = null
 
@@ -16,12 +18,17 @@ object PrimitiveScope: Scope {
         return listOfNotNull(symbolTable.get(name))
     }
 
-    val symbolTable = mapOf<String, Declaration>(
-            // XXX check that the names are different?
-            IntegerTypeDeclaration.name to IntegerTypeDeclaration,
-            FloatTypeDeclaration.name to FloatTypeDeclaration,
-            DoubleTypeDeclaration.name to DoubleTypeDeclaration,
-            UnitTypeDeclaration.name to UnitTypeDeclaration,
-            BooleanTypeDeclaration.name to BooleanTypeDeclaration
-    )
+    val symbolTable = {
+        fun primitiveTypeDecl(type: NamedType) = type.name to PrimitiveTypeDeclaration(type, type.name)
+        mapOf<String, Declaration>(
+            primitiveTypeDecl(FloatType),
+            primitiveTypeDecl(DoubleType),
+            primitiveTypeDecl(IntegerType),
+            primitiveTypeDecl(UnitType),
+            primitiveTypeDecl(BooleanType),
+            primitiveTypeDecl(Vec2Type),
+            primitiveTypeDecl(Vec3Type),
+            primitiveTypeDecl(Vec4Type)
+        )
+    }()
 }
