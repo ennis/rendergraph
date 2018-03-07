@@ -71,6 +71,11 @@ class ComponentDeclarationImpl(
         }
     }
 
+    override fun forceFullResolve() {
+        _resolutionScope.doResolve()
+        members.getAllDeclarations().forceFullResolve()
+    }
+
 }
 
 

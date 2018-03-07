@@ -7,4 +7,6 @@ interface Declaration
 {
     val name: String
     val owningDeclaration: Declaration? get() = null
+
+    fun forceFullResolve() {}
 }

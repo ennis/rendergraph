@@ -9,7 +9,6 @@ interface VariableDeclaration : Declaration {
     val type: Type
 }
 
-// the owning declaration is always resolved eagerly
 class VariableDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
@@ -17,7 +16,7 @@ class VariableDeclarationImpl(
         variable: RgVariable) : VariableDeclaration
 {
     val type_ = Lazy {
-        typeResolver.checkConstantDeclaration(
+        typeResolver.checkVariableDeclaration(
                 variable,
                 owningDeclaration.resolutionScope,
                 owningDeclaration.resolutionScope)
@@ -25,4 +24,8 @@ class VariableDeclarationImpl(
 
     override val type: Type
         get() = type_.value
+
+    override fun forceFullResolve() {
+        type_.doResolve()
+    }
 }

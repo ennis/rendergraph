@@ -20,7 +20,8 @@ class ModuleDeclarationImpl(
     override val resolutionScope: Scope
         get() = _resolutionScope.value
 
-    val _resolutionScope = Lazy { ChainedScope(members) }
+    // TODO chaining the primitive scope here is a hack
+    val _resolutionScope = Lazy { ChainedScope(members, PrimitiveScope) }
 
     override val members = object : LazyMemberScope(this, module, d) {
         override fun resolveDeclaration(o: RgDeclaration): Declaration? {
@@ -31,5 +32,10 @@ class ModuleDeclarationImpl(
                 else -> null
             }
         }
+    }
+
+    override fun forceFullResolve() {
+        _resolutionScope.doResolve()
+        members.getAllDeclarations().forceFullResolve()
     }
 }

@@ -11,6 +11,8 @@ import patapon.rendergraph.lang.diagnostics.Diagnostic
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.utils.PrettyPrinterVisitor
 import patapon.rendergraph.lang.psi.RgFile
+import patapon.rendergraph.lang.psi.RgModule
+import patapon.rendergraph.lang.psi.RgVisitor
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.types.TypeResolver
 import patapon.rendergraph.lang.utils.Printer
@@ -69,9 +71,19 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
             }
         }
 
+
         val bindingContext = BindingContextImpl()
         val typeResolver = TypeResolver(bindingContext, diagnosticSink)
         val declarationResolver = DeclarationResolver(bindingContext, typeResolver, diagnosticSink)
+
+        val moduleResolverVisitor = object : RgVisitor() {
+            override fun visitModule(o: RgModule) {
+                val decl = declarationResolver.resolveModuleDeclaration(o)
+                decl.forceFullResolve()
+            }
+        }
+        file.acceptChildren(moduleResolverVisitor)
+
         val ppBuffer = StringBuilder()
         val prettyPrinter = PrettyPrinterVisitor(declarationResolver, bindingContext, typeResolver, ppBuffer)
         file.acceptChildren(prettyPrinter)

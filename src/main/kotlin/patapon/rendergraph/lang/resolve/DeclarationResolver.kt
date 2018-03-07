@@ -36,7 +36,13 @@ import patapon.rendergraph.lang.types.TypeResolver
 }*/
 
 fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration> {
-    return scope.findDeclarations(path.toString())
+    return if (path is RgQualifiedPath) {
+        TODO("resolve qualified paths")
+    }
+    else {
+        val path = path as RgPathRoot
+        scope.findDeclarations(path.identifier.text)
+    }
 }
 
 //fun resolveAbsoluteModulePath(path: RgPath, rootScope: Scope): ModuleDeclaration
@@ -60,21 +66,14 @@ class DeclarationResolver(
         }
     }
 
-    //fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
-    //fun resolveVariableDeclaration(variable: RgVariable): VariableDeclaration = resolveVariableDeclaration(null, variable)
-
-    /*fun resolveMemberFunctionDeclaration(
-            function: RgFunction,
-            owningDeclaration: ComponentDeclaration,
-
-    )*/
-
     fun resolveFunctionDeclaration(
             function: RgFunction,
             owningDeclaration: DeclarationWithResolutionScope,
             resolutionScope: Scope): FunctionDeclaration {
         val name = function.name
         val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, this, typeResolver, function)
+        // resolve parameters
+        function.parameterList.forEachIndexed { index, param -> resolveValueParameter(param, index, decl, resolutionScope) }
 
         /*if (owningDeclaration is ComponentDeclaration) {
             val inheritanceScope = owningDeclaration.inheritanceScope
@@ -89,6 +88,12 @@ class DeclarationResolver(
         }*/
 
         context.functionDeclarations.put(function, decl)
+        return decl
+    }
+
+    private fun resolveValueParameter(param: RgParameter, index: Int, owningDeclaration: FunctionDeclaration, resolutionScope: Scope): ValueParameter {
+        val decl = ValueParameter(owningDeclaration, param.name ?: UNNAMED_VALUE_PARAMETER, typeResolver.resolveTypeReference(param.type!!, resolutionScope), index)
+        context.valueParameters.put(param, decl)
         return decl
     }
 

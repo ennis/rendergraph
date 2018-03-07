@@ -8,7 +8,6 @@ object IntegerType :  PrimitiveType("int")
 object UnitType : PrimitiveType("void")
 object UnresolvedType: PrimitiveType("<unresolved>")
 object BooleanType: PrimitiveType("bool")
-// this type cannot be spelled: it has no declaration
 object NothingType: PrimitiveType("Nothing")
 
 abstract class PrimitiveVectorType(val elementType: PrimitiveType, val numElements: Int, override val name: String): NamedType()

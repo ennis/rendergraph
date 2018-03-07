@@ -17,9 +17,9 @@ class PrettyPrinterVisitor(
     private val p = Printer(outString)
 
     override fun visitModule(o: RgModule) {
-        val decl = declarationResolver.resolveModuleDeclaration(o)
-        decl.members.getAllDeclarations()
-        p.append("Module${o.textRange} '${o.name}' name='${decl.name}' fqName=?")
+        val decl = context.moduleDeclarations[o]
+        p.append("Module${o.textRange} '${o.name}'")
+        if (decl != null) { p.append(" name='${decl.name}' fqName=?") }
 
         p.appendln()
         p.withIndent {
@@ -35,7 +35,6 @@ class PrettyPrinterVisitor(
         val decl = context.componentDeclarations[o]
 
         p.append("Component${o.textRange} '${o.name}'")
-        decl?.apply { members.getAllDeclarations() }
 
         if (decl != null) { p.append(" name='${decl.name}'") }
         else { p.append(" <unresolved>") }

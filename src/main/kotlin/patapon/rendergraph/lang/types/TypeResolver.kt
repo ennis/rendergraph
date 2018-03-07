@@ -1,6 +1,5 @@
 package patapon.rendergraph.lang.types
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.IntType
 import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.declarations.TypeDeclaration
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
@@ -11,12 +10,9 @@ import patapon.rendergraph.lang.psi.ext.Operator
 import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.resolve.resolvePath
-import kotlin.math.exp
 
-class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
-{
-    fun checkConstantDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
-    {
+class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
+    fun checkVariableDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type {
         // we have a variable decl node, and we want to know its type:
         // if not found, resolve:
         // resolve the type annotation (get a resolution scope)
@@ -24,14 +20,12 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         val typeAnnotation = variable.type
         if (typeAnnotation != null) {
             return resolveTypeReference(typeAnnotation, declarationResolutionScope)
-        }
-        else {
+        } else {
             return UnresolvedType
         }
     }
 
-    fun resolveTypeReference(typeRef: RgType, resolutionScope: Scope): Type
-    {
+    fun resolveTypeReference(typeRef: RgType, resolutionScope: Scope): Type {
         val lookupResult = resolvePath(typeRef.path, resolutionScope)
         if (lookupResult.isEmpty()) {
             d.report(Diagnostics.UNDECLARED_IDENTIFIER.with(typeRef, typeRef.text))
@@ -41,14 +35,12 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
             // Ambiguous result
             d.report(Diagnostics.AMBIGUOUS_TYPE_REFERENCE.with(typeRef, typeRef.text))
             return UnresolvedType
-        }
-        else {
+        } else {
             val typeDecl = lookupResult.first() as? TypeDeclaration
             if (typeDecl != null) {
                 context.typeReferences.put(typeRef, typeDecl)
                 return typeDecl.type
-            }
-            else {
+            } else {
                 // Not a type declaration
                 d.report(Diagnostics.EXPECTED_X_FOUND_Y.with(typeRef, "type reference", typeRef.text))
                 return UnresolvedType
@@ -56,13 +48,7 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         }
     }
 
-    //fun checkConstantDeclaration(constant: RgConstant, decl: VariableDeclaration, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type
-    //{
-    //    TODO()
-    //}
-
-    fun checkFunctionReturnType(function: RgFunction, declarationResolutionScope: Scope, bodyResolutionScope: Scope): Type
-    {
+    fun checkFunctionReturnType(function: RgFunction, declarationResolutionScope: Scope, bodyResolutionScope: Scope): Type {
         val returnType = function.returnType
         if (returnType != null) {
             return resolveTypeReference(returnType, declarationResolutionScope)
@@ -70,27 +56,22 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         return UnresolvedType
     }
 
-    fun checkFunctionArgumentType(parameter: RgParameter, resolutionScope: Scope): Type
-    {
+    fun checkFunctionArgumentType(parameter: RgParameter, resolutionScope: Scope): Type {
         return resolveTypeReference(parameter.type!!, resolutionScope)
     }
 
-    fun compareTypes(typeA: Type, typeB: Type): Boolean
-    {
+    fun compareTypes(typeA: Type, typeB: Type): Boolean {
         // same instance: this works if both typeA and typeB are primitive types without qualifiers
         if (typeA == typeB) {
             return true
-        }
-        else {
+        } else {
             // TODO: more complex type checking
             return false
         }
     }
 
-    fun checkLiteralExpr(lit: RgLiteral): Type
-    {
-        val type = when (lit)
-        {
+    fun checkLiteralExpr(lit: RgLiteral): Type {
+        val type = when (lit) {
             is RgFloatLiteral -> FloatType
             is RgIntLiteral -> IntegerType
             is RgDoubleLiteral -> DoubleType
@@ -98,12 +79,11 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
             is RgUintLiteral -> IntegerType
             else -> throw IllegalStateException("unsupported literal type")
         }
-        context.expressionTypes.put(lit,type)
+        context.expressionTypes.put(lit, type)
         return type
     }
 
-    fun checkReturnExpr(expr: RgReturnExpression): NothingType
-    {
+    fun checkReturnExpr(expr: RgReturnExpression): NothingType {
         // typecheck the return value
         val returnValueExpr = expr.expression
         if (returnValueExpr != null)
@@ -112,8 +92,7 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         return NothingType
     }
 
-    fun checkEqualityExprTypes(op: Operator, tyLeft: Type, tyRight: Type): Type
-    {
+    fun checkEqualityExprTypes(op: Operator, tyLeft: Type, tyRight: Type): Type {
         val sameTypes = compareTypes(tyLeft, tyRight)
         if (!sameTypes) {
             d.error("Wrong operand types to ${op}: the two subexpressions do not have the same type")
@@ -121,15 +100,13 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         return BooleanType
     }
 
-    fun checkBinaryExpression(expr: RgBinaryExpression): Type
-    {
+    fun checkBinaryExpression(expr: RgBinaryExpression): Type {
         // TYPECHECK: left and right subexpressions must have the same types
         val op = expr.opType
         val tyLeft = checkExpression(expr.left)
         val tyRight = checkExpression(expr.right!!)
 
-        val tyResult = when (op)
-        {
+        val tyResult = when (op) {
             Operator.ADD -> TODO()
             Operator.SUB -> TODO()
             Operator.MUL -> TODO()
@@ -150,8 +127,8 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
             Operator.BIT_XOR_ASSIGN -> TODO()
             Operator.SHL_ASSIGN -> TODO()
             Operator.SHR_ASSIGN -> TODO()
-            Operator.EQ -> checkEqualityExprTypes(op,tyLeft,tyRight)
-            Operator.NOT_EQ -> checkEqualityExprTypes(op,tyLeft,tyRight)
+            Operator.EQ -> checkEqualityExprTypes(op, tyLeft, tyRight)
+            Operator.NOT_EQ -> checkEqualityExprTypes(op, tyLeft, tyRight)
             Operator.LT -> TODO()
             Operator.LTEQ -> TODO()
             Operator.GT -> TODO()
@@ -162,10 +139,8 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink)
         return tyResult
     }
 
-    fun checkExpression(expr: RgExpression): Type
-    {
-        return when (expr)
-        {
+    fun checkExpression(expr: RgExpression): Type {
+        return when (expr) {
             is RgBinaryExpression -> checkBinaryExpression(expr)
             is RgReturnExpression -> checkReturnExpr(expr)
             is RgLiteral -> checkLiteralExpr(expr)

@@ -1,10 +1,14 @@
 package patapon.rendergraph.lang.declarations
 
+import com.intellij.openapi.diagnostic.Logger
+import patapon.rendergraph.lang.resolve.ChainedScope
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.types.*
 
 // The scope of all builtin/primitive declarations: types, functions, etc.
 object PrimitiveScope: Scope {
+    var LOG = Logger.getInstance(ChainedScope::class.java)
+
     class PrimitiveTypeDeclaration(override val type: Type, override val name: String): TypeDeclaration
 
     override fun getAllDeclarations(): Collection<Declaration> {
@@ -12,7 +16,9 @@ object PrimitiveScope: Scope {
     }
 
     override fun findDeclarations(name: String): List<Declaration> {
-        return listOfNotNull(symbolTable.get(name))
+        val d = listOfNotNull(symbolTable.get(name))
+        LOG.info("Lookup: $name into PrimitiveScope => ${d.size} results found")
+        return d
     }
 
     val symbolTable = {
