@@ -1,27 +1,17 @@
 package patapon.rendergraph.lang.resolve
 
-import patapon.rendergraph.lang.declarations.ComponentDeclaration
 import patapon.rendergraph.lang.declarations.Declaration
-import patapon.rendergraph.lang.declarations.FunctionDeclaration
-import patapon.rendergraph.lang.declarations.VariableDeclaration
 
-
-interface Scope
-{
-    fun getParentScope(): Scope?
-    val owningDeclaration: Declaration?
-
+interface Scope {
     fun getAllDeclarations(): Collection<Declaration>
     fun findDeclarations(name: String): Collection<Declaration>
 
     //fun getFunctionDeclarations(name: String): Collection<FunctionDeclaration>
     //fun getVariableDeclarations(name: String): Collection<VariableDeclaration>
     //fun getComponentDeclarations(name: String): Collection<ComponentDeclaration>
-
 }
 
-interface ScopeBuilder
-{
+interface ScopeBuilder {
     val scope: Scope
     fun addDeclaration(name: String, decl: Declaration): Boolean
     fun addDeclaration(decl: Declaration): Boolean {
@@ -31,12 +21,10 @@ interface ScopeBuilder
 
 class ScopeImpl(
         val enclosingScope: Scope?,
-        override val owningDeclaration: Declaration?,
-        initializer: ScopeBuilder.() -> Unit): Scope
-{
+        initializer: ScopeBuilder.() -> Unit) : Scope {
     var symbolTable = mutableMapOf<String, Declaration>()
 
-    override fun getParentScope(): Scope? {
+    fun getParentScope(): Scope? {
         return enclosingScope
     }
 

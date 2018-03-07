@@ -1,38 +1,37 @@
 package patapon.rendergraph.lang.resolve
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiUtil
-import patapon.rendergraph.lang.declarations.*
+import patapon.rendergraph.lang.declarations.Declaration
+import patapon.rendergraph.lang.declarations.DeclarationWithResolutionScope
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.error
-import patapon.rendergraph.lang.diagnostics.trace
-import patapon.rendergraph.lang.psi.*
-import patapon.rendergraph.lang.utils.memoize
+import patapon.rendergraph.lang.psi.RgComponent
+import patapon.rendergraph.lang.psi.RgFunction
+import patapon.rendergraph.lang.psi.RgNamedDeclaration
+import patapon.rendergraph.lang.psi.RgVariable
 import patapon.rendergraph.lang.utils.Lazy
+import patapon.rendergraph.lang.utils.memoize
 
 // A scope whose elements (declarations) are resolved on-demand
 class LazyScope(
-        override val owningDeclaration: DeclarationWithResolutionScope,
-        val scopeParentElement: PsiElement,
-        val declarationResolver: DeclarationResolver,
-        val d: DiagnosticSink
-    ): Scope
-{
-    val decls = memoize(::resolve)
-    val allDeclarations_ = Lazy {
+        val owningDeclaration: DeclarationWithResolutionScope,
+        private val scopeParentElement: PsiElement,
+        private val declarationResolver: DeclarationResolver,
+        private val d: DiagnosticSink
+) : Scope {
+    private val decls = memoize(::resolve)
+    private val allDeclarations = Lazy {
         doGetAllDeclarations()
     }
 
-    fun doGetAllDeclarations(): Collection<Declaration> {
+    private fun doGetAllDeclarations(): Collection<Declaration> {
         // just perform name resolution for each PSI declaration and collect the results
         // Note: this could be lazy as well
         return PsiTreeUtil.findChildrenOfType(scopeParentElement, RgNamedDeclaration::class.java).flatMap { o -> decls(o.name!!) }.distinct()
     }
 
-    override fun getAllDeclarations(): Collection<Declaration> = allDeclarations_.value
+    override fun getAllDeclarations(): Collection<Declaration> = allDeclarations.value
 
     // Resolve a declaration by its name, regardless of its type
     // Also handles conflicting declarations within the same scope that cannot be disambiguated
@@ -43,8 +42,7 @@ class LazyScope(
         val matching = PsiTreeUtil.findChildrenOfType(scopeParentElement, RgNamedDeclaration::class.java)
                 .filter { it.name == name }
                 .mapNotNull {
-                    when (it)
-                    {
+                    when (it) {
                         is RgFunction -> declarationResolver.resolveFunctionDeclaration(it, owningDeclaration, this@LazyScope)
                         is RgComponent -> declarationResolver.resolveComponentDeclaration(it, owningDeclaration)
                         is RgVariable -> declarationResolver.resolveVariableDeclaration(it, owningDeclaration)
@@ -68,7 +66,4 @@ class LazyScope(
 
     override fun findDeclarations(name: String): Collection<Declaration> = decls(name)
 
-    override fun getParentScope(): Scope? {
-        return null
-    }
 }

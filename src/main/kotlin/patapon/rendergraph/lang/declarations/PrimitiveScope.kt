@@ -7,9 +7,6 @@ import patapon.rendergraph.lang.types.*
 object PrimitiveScope: Scope {
     class PrimitiveTypeDeclaration(override val type: Type, override val name: String): TypeDeclaration
 
-    override val owningDeclaration = null
-    override fun getParentScope() = null
-
     override fun getAllDeclarations(): Collection<Declaration> {
         return symbolTable.values
     }

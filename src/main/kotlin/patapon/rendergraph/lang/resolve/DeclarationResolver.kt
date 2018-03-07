@@ -1,11 +1,7 @@
 package patapon.rendergraph.lang.resolve
 
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiIdentifier
-import com.intellij.psi.util.PsiTreeUtil
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
-import patapon.rendergraph.lang.diagnostics.error
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.types.TypeResolver
 
@@ -39,8 +35,7 @@ import patapon.rendergraph.lang.types.TypeResolver
     }
 }*/
 
-fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration>
-{
+fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration> {
     return scope.findDeclarations(path.toString())
 }
 
@@ -49,18 +44,17 @@ fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration>
 //}
 
 // Responsible for resolving the contents of declarations with resolution scopes (components, functions, constants with initializers...)
-class DeclarationResolver(val context: BindingContext, val typeResolver: TypeResolver, val d: DiagnosticSink): RgVisitor()
-{
-
-
+class DeclarationResolver(
+        private val context: BindingContext,
+        private val typeResolver: TypeResolver,
+        private val d: DiagnosticSink) : RgVisitor() {
     /*fun resolveModulePath(path: RgPath, scope: Scope): ModuleDeclaration
     {
         // first, resolve parent module
         PsiTreeUtil.findChildrenOfType(path, PsiIdentifier::class.java).toTypedArray().dropLast(1)
     }*/
 
-    fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration
-    {
+    fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration {
         return context.moduleDeclarations.getOrPut(mod) {
             ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, this, mod, d)
         }
@@ -72,8 +66,7 @@ class DeclarationResolver(val context: BindingContext, val typeResolver: TypeRes
     fun resolveFunctionDeclaration(
             function: RgFunction,
             owningDeclaration: DeclarationWithResolutionScope,
-            resolutionScope: Scope): FunctionDeclaration
-    {
+            resolutionScope: Scope): FunctionDeclaration {
         val name = function.name
         val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, this, typeResolver, function)
 
@@ -93,23 +86,20 @@ class DeclarationResolver(val context: BindingContext, val typeResolver: TypeRes
         return decl
     }
 
-    fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope): VariableDeclaration
-    {
+    fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope): VariableDeclaration {
         val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
         context.variableDeclarations.put(variable, decl)
         return decl
     }
 
-    fun resolveComponentDeclaration(component: RgComponent, owningDeclaration: DeclarationWithResolutionScope): ComponentDeclaration
-    {
+    fun resolveComponentDeclaration(component: RgComponent, owningDeclaration: DeclarationWithResolutionScope): ComponentDeclaration {
         val decl = ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component, d)
         context.componentDeclarations.put(component, decl)
         return decl
     }
 
     // Called when a function needs a scope for its body
-    fun resolveFunctionBodyScope(declaration: FunctionDeclaration, function: RgFunction): Scope
-    {
+    fun resolveFunctionBodyScope(declaration: FunctionDeclaration, function: RgFunction): Scope {
         // build a scope with the arguments
         // also force resolve the parent scope
         //return ScopeImpl(decl)
@@ -117,8 +107,7 @@ class DeclarationResolver(val context: BindingContext, val typeResolver: TypeRes
     }
 
     // Build the resolution scope for a component declaration
-    fun buildComponentMemberResolutionScope(declaration: ComponentDeclaration, component: RgComponent): Scope
-    {
+    fun buildComponentMemberResolutionScope(declaration: ComponentDeclaration, component: RgComponent): Scope {
         val baseResolutionScope = declaration.resolutionScope
         component.baseComponentList?.pathList?.forEach { path ->
             // query the declaration associated with the base somehow
