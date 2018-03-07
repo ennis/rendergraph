@@ -1,12 +1,9 @@
 package patapon.rendergraph.lang.declarations
 
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
-import patapon.rendergraph.lang.psi.RgModule
-import patapon.rendergraph.lang.psi.RgModuleContents
-import patapon.rendergraph.lang.resolve.DeclarationResolver
-import patapon.rendergraph.lang.resolve.LazyScope
-import patapon.rendergraph.lang.resolve.Scope
-import patapon.rendergraph.lang.resolve.ScopeImpl
+import patapon.rendergraph.lang.psi.*
+import patapon.rendergraph.lang.resolve.*
+import patapon.rendergraph.lang.utils.Lazy
 
 interface ModuleDeclaration: DeclarationWithResolutionScope
 {
@@ -20,8 +17,19 @@ class ModuleDeclarationImpl(
         d: DiagnosticSink
     ): ModuleDeclaration
 {
-    override val members = LazyScope(this, module, declarationResolver, d)
-
     override val resolutionScope: Scope
-        get() = members
+        get() = _resolutionScope.value
+
+    val _resolutionScope = Lazy { ChainedScope(members) }
+
+    override val members = object : LazyMemberScope(this, module, d) {
+        override fun resolveDeclaration(o: RgDeclaration): Declaration? {
+            return when (o) {
+                is RgFunction -> declarationResolver.resolveFunctionDeclaration(o, this@ModuleDeclarationImpl, resolutionScope)
+                is RgComponent -> declarationResolver.resolveComponentDeclaration(o, this@ModuleDeclarationImpl)
+                is RgVariable -> declarationResolver.resolveVariableDeclaration(o, this@ModuleDeclarationImpl)
+                else -> null
+            }
+        }
+    }
 }

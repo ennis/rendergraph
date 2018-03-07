@@ -3,11 +3,14 @@ package patapon.rendergraph.lang.declarations
 import com.intellij.openapi.diagnostic.Logger
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.RgComponent
+import patapon.rendergraph.lang.psi.RgDeclaration
+import patapon.rendergraph.lang.psi.RgFunction
+import patapon.rendergraph.lang.psi.RgVariable
+import patapon.rendergraph.lang.resolve.ChainedScope
 import patapon.rendergraph.lang.resolve.DeclarationResolver
-import patapon.rendergraph.lang.resolve.LazyScope
+import patapon.rendergraph.lang.resolve.LazyMemberScope
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.utils.Lazy
-
 
 interface ComponentDeclaration: DeclarationWithResolutionScope
 {
@@ -38,7 +41,7 @@ interface ComponentDeclaration: DeclarationWithResolutionScope
 }
 
 class ComponentDeclarationImpl(
-        override val owningDeclaration: Declaration,
+        override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
         declarationResolver: DeclarationResolver,
         component: RgComponent,
@@ -50,12 +53,23 @@ class ComponentDeclarationImpl(
     }
 
     override val inheritanceScope: Scope
-        get() = TODO("not implemented")
+        get() = members
 
     override val resolutionScope: Scope
-        get() = TODO("compute the member resolution scope")
+        get() = _resolutionScope.value
 
-    override val members = LazyScope(this, component, declarationResolver, d)
+    val _resolutionScope = Lazy { ChainedScope(inheritanceScope, owningDeclaration.resolutionScope) }
+
+    override val members = object : LazyMemberScope(this, component, d) {
+        override fun resolveDeclaration(o: RgDeclaration): Declaration? {
+            return when (o) {
+                is RgFunction -> declarationResolver.resolveFunctionDeclaration(o, this@ComponentDeclarationImpl, resolutionScope)
+                is RgComponent -> declarationResolver.resolveComponentDeclaration(o, this@ComponentDeclarationImpl)
+                is RgVariable -> declarationResolver.resolveVariableDeclaration(o, this@ComponentDeclarationImpl)
+                else -> null
+            }
+        }
+    }
 
 }
 

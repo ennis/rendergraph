@@ -6,18 +6,14 @@ import patapon.rendergraph.lang.declarations.Declaration
 import patapon.rendergraph.lang.declarations.DeclarationWithResolutionScope
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.error
-import patapon.rendergraph.lang.psi.RgComponent
-import patapon.rendergraph.lang.psi.RgFunction
-import patapon.rendergraph.lang.psi.RgNamedDeclaration
-import patapon.rendergraph.lang.psi.RgVariable
+import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.utils.Lazy
 import patapon.rendergraph.lang.utils.memoize
 
 // A scope whose elements (declarations) are resolved on-demand
-class LazyScope(
+abstract class LazyMemberScope(
         val owningDeclaration: DeclarationWithResolutionScope,
         private val scopeParentElement: PsiElement,
-        private val declarationResolver: DeclarationResolver,
         private val d: DiagnosticSink
 ) : Scope {
     private val decls = memoize(::resolve)
@@ -41,14 +37,7 @@ class LazyScope(
         // find all PSI declaration elements that match by name
         val matching = PsiTreeUtil.findChildrenOfType(scopeParentElement, RgNamedDeclaration::class.java)
                 .filter { it.name == name }
-                .mapNotNull {
-                    when (it) {
-                        is RgFunction -> declarationResolver.resolveFunctionDeclaration(it, owningDeclaration, this@LazyScope)
-                        is RgComponent -> declarationResolver.resolveComponentDeclaration(it, owningDeclaration)
-                        is RgVariable -> declarationResolver.resolveVariableDeclaration(it, owningDeclaration)
-                        else -> null
-                    }
-                }
+                .mapNotNull { resolveDeclaration(it) }
 
         // now check for name clashes
         matching.forEach { a ->
@@ -64,6 +53,7 @@ class LazyScope(
         return matching
     }
 
-    override fun findDeclarations(name: String): Collection<Declaration> = decls(name)
+    protected abstract fun resolveDeclaration(o: RgDeclaration): Declaration?
 
+    override fun findDeclarations(name: String): Collection<Declaration> = decls(name)
 }

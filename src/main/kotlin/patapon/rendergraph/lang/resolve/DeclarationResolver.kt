@@ -63,6 +63,12 @@ class DeclarationResolver(
     //fun resolveComponentDeclaration(component: RgComponent): ComponentDeclaration = resolveComponentDeclaration(null, component)
     //fun resolveVariableDeclaration(variable: RgVariable): VariableDeclaration = resolveVariableDeclaration(null, variable)
 
+    /*fun resolveMemberFunctionDeclaration(
+            function: RgFunction,
+            owningDeclaration: ComponentDeclaration,
+
+    )*/
+
     fun resolveFunctionDeclaration(
             function: RgFunction,
             owningDeclaration: DeclarationWithResolutionScope,
