@@ -2,34 +2,35 @@ package patapon.rendergraph.lang.psi.ext
 
 import patapon.rendergraph.lang.psi.*
 
-enum class Operator(val text: String)
+enum class Operator(val text: String, val isAssignment: Boolean)
 {
-    ADD("+"),
-    SUB("-"),
-    MUL("*"),
-    DIV("/"),
-    REM("%"),
-    BIT_AND("&"),
-    BIT_OR("|"),
-    BIT_XOR("^"),
-    SHL("<<"),
-    SHR(">>"),
-    ADD_ASSIGN("+="),
-    SUB_ASSIGN("-="),
-    MUL_ASSIGN("*="),
-    DIV_ASSIGN("/="),
-    REM_ASSIGN("%="),
-    BIT_AND_ASSIGN("&="),
-    BIT_OR_ASSIGN("|="),
-    BIT_XOR_ASSIGN("^="),
-    SHL_ASSIGN("<<="),
-    SHR_ASSIGN(">>="),
-    EQ("=="),
-    NOT_EQ("!="),
-    LT("<"),
-    LTEQ("<="),
-    GT(">"),
-    GTEQ(">=")
+    ADD("+", false),
+    SUB("-", false),
+    MUL("*", false),
+    DIV("/", false),
+    REM("%", false),
+    BIT_AND("&", false),
+    BIT_OR("|", false),
+    BIT_XOR("^", false),
+    SHL("<<", false),
+    SHR(">>", false),
+    ASSIGN("=", true),
+    ADD_ASSIGN("+=", true),
+    SUB_ASSIGN("-=", true),
+    MUL_ASSIGN("*=", true),
+    DIV_ASSIGN("/=", true),
+    REM_ASSIGN("%=", true),
+    BIT_AND_ASSIGN("&=", true),
+    BIT_OR_ASSIGN("|=", true),
+    BIT_XOR_ASSIGN("^=", true),
+    SHL_ASSIGN("<<=", true),
+    SHR_ASSIGN(">>=", true),
+    EQ("==", false),
+    NOT_EQ("!=", false),
+    LT("<", false),
+    LTEQ("<=", false),
+    GT(">", false),
+    GTEQ(">=", false)
 }
 
 val RgBinaryExpression.opType get() = when (binaryOp.text) {
@@ -44,6 +45,7 @@ val RgBinaryExpression.opType get() = when (binaryOp.text) {
     "<<" -> Operator.SHL
     ">>" -> Operator.SHR
 
+    "=" -> Operator.ASSIGN
     "+=" -> Operator.ADD_ASSIGN
     "-=" -> Operator.SUB_ASSIGN
     "*=" -> Operator.MUL_ASSIGN

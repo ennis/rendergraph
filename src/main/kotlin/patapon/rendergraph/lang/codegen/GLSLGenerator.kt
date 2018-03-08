@@ -65,6 +65,7 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
             Operator.BIT_XOR -> { genExpr(expr.left); p.append(" ^ "); genExpr(expr.right!!); }
             Operator.SHL -> { genExpr(expr.left); p.append(" << "); genExpr(expr.right!!); }
             Operator.SHR -> { genExpr(expr.left); p.append(" >> "); genExpr(expr.right!!); }
+            Operator.ASSIGN ->  { genExpr(expr.left); p.append(" = "); genExpr(expr.right!!); }
             Operator.ADD_ASSIGN -> { genExpr(expr.left); p.append(" += "); genExpr(expr.right!!); }
             Operator.SUB_ASSIGN -> { genExpr(expr.left); p.append(" -= "); genExpr(expr.right!!); }
             Operator.MUL_ASSIGN -> { genExpr(expr.left); p.append(" *= "); genExpr(expr.right!!); }
@@ -137,7 +138,7 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
         }
 
         override fun visitVariable(o: RgVariable) {
-            genLocalVar(o);
+            genLocalVar(o)
         }
     }
 

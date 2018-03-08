@@ -11,6 +11,12 @@ import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.resolve.resolvePath
 
+enum class ValueCategory
+{
+    LVALUE,
+    RVALUE
+}
+
 class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
     fun checkVariableDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type {
         // we have a variable decl node, and we want to know its type:
@@ -38,7 +44,7 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         } else {
             val typeDecl = lookupResult.first() as? TypeDeclaration
             if (typeDecl != null) {
-                context.typeReferences.put(typeRef, typeDecl)
+                context.typeReferences[typeRef] = typeDecl
                 return typeDecl.type
             } else {
                 // Not a type declaration
@@ -70,6 +76,13 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         }
     }
 
+    fun getValueCategory(expr: RgExpression) = when (expr) {
+        is RgQualification -> ValueCategory.LVALUE
+        is RgBinaryExpression -> { if (expr.opType.isAssignment) { ValueCategory.LVALUE } else { ValueCategory.RVALUE } }
+        is RgSimpleReferenceExpression -> ValueCategory.LVALUE
+        else -> ValueCategory.RVALUE
+    }
+
     fun checkLiteralExpr(lit: RgLiteral): Type {
         val type = when (lit) {
             is RgFloatLiteral -> FloatType
@@ -79,7 +92,7 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
             is RgUintLiteral -> IntegerType
             else -> throw IllegalStateException("unsupported literal type")
         }
-        context.expressionTypes.put(lit, type)
+        context.expressionTypes[lit] = type
         return type
     }
 
@@ -88,35 +101,53 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         val returnValueExpr = expr.expression
         if (returnValueExpr != null)
             checkExpression(returnValueExpr)
-        context.expressionTypes.put(expr, NothingType)
+        context.expressionTypes[expr] = NothingType
         return NothingType
     }
 
-    fun checkEqualityExprTypes(op: Operator, tyLeft: Type, tyRight: Type): Type {
+    fun checkEqualityExprTypes(op: Operator, expr: RgBinaryExpression): Type {
+        val tyLeft = checkExpression(expr.left)
+        val tyRight = checkExpression(expr.right!!)
         val sameTypes = compareTypes(tyLeft, tyRight)
         if (!sameTypes) {
-            d.error("Wrong operand types to ${op}: the two subexpressions do not have the same type")
+            d.error("Wrong operand types to ${op}: left- and right-hand side have different types", expr)
         }
-        return BooleanType
+        val tyResult = BooleanType
+        context.expressionTypes[expr] = tyResult
+        return tyResult
+    }
+
+    fun checkArithmeticExpression(op: Operator, expr: RgBinaryExpression): Type {
+        // TODO int to float implicit conversions, etc.
+        val tyLeft = checkExpression(expr.left)
+        val tyRight = checkExpression(expr.right!!)
+        val sameTypes = compareTypes(tyLeft, tyRight)
+        if (!sameTypes) {
+            d.error("Wrong operand types to ${op}: left- and right-hand side have different types", expr)
+            return UnresolvedType
+        }
+
+        val tyResult = tyLeft
+        context.expressionTypes[expr] = tyResult
+        return tyResult
     }
 
     fun checkBinaryExpression(expr: RgBinaryExpression): Type {
         // TYPECHECK: left and right subexpressions must have the same types
         val op = expr.opType
-        val tyLeft = checkExpression(expr.left)
-        val tyRight = checkExpression(expr.right!!)
 
         val tyResult = when (op) {
-            Operator.ADD -> TODO()
-            Operator.SUB -> TODO()
-            Operator.MUL -> TODO()
-            Operator.DIV -> TODO()
+            Operator.ADD -> checkArithmeticExpression(op, expr)
+            Operator.SUB -> checkArithmeticExpression(op, expr)
+            Operator.MUL -> checkArithmeticExpression(op, expr)
+            Operator.DIV -> checkArithmeticExpression(op, expr)
             Operator.REM -> TODO()
             Operator.BIT_AND -> TODO()
             Operator.BIT_OR -> TODO()
             Operator.BIT_XOR -> TODO()
             Operator.SHL -> TODO()
             Operator.SHR -> TODO()
+            Operator.ASSIGN -> checkAssignExpression(expr)
             Operator.ADD_ASSIGN -> TODO()
             Operator.SUB_ASSIGN -> TODO()
             Operator.MUL_ASSIGN -> TODO()
@@ -127,16 +158,37 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
             Operator.BIT_XOR_ASSIGN -> TODO()
             Operator.SHL_ASSIGN -> TODO()
             Operator.SHR_ASSIGN -> TODO()
-            Operator.EQ -> checkEqualityExprTypes(op, tyLeft, tyRight)
-            Operator.NOT_EQ -> checkEqualityExprTypes(op, tyLeft, tyRight)
+            Operator.EQ -> checkEqualityExprTypes(op, expr)
+            Operator.NOT_EQ -> checkEqualityExprTypes(op, expr)
             Operator.LT -> TODO()
             Operator.LTEQ -> TODO()
             Operator.GT -> TODO()
             Operator.GTEQ -> TODO()
         }
 
-        context.expressionTypes.put(expr, tyResult)
         return tyResult
+    }
+
+    private fun checkAssignExpression(expr: RgBinaryExpression): Type
+    {
+        val tyLeft = checkExpression(expr.left)
+        val tyRight = checkExpression(expr.right!!)
+
+        if (getValueCategory(expr.left) != ValueCategory.LVALUE) {
+            d.error("Left side of assignment is not an lvalue", expr.left)
+        }
+        if (!compareTypes(tyLeft, tyRight)) {
+            d.error("Left and right side of assignment have different types", expr)
+        }
+
+        context.expressionTypes[expr] = tyLeft
+        return tyLeft
+    }
+
+    private fun checkQualification(expr: RgQualification): Type {
+        val left = expr.expression
+        val tyLeft = checkExpression(left)
+        TODO()
     }
 
     fun checkExpression(expr: RgExpression): Type {
