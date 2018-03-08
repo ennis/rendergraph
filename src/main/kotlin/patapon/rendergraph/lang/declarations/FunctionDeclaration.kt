@@ -10,33 +10,33 @@ import patapon.rendergraph.lang.utils.Lazy
 
 interface FunctionDeclaration : DeclarationWithResolutionScope {
     val returnType: Type
-    val bodyResolutionScope: Scope
 }
 
 class FunctionDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
-        val declarationResolver: DeclarationResolver,
-        val typeResolver: TypeResolver,
-        function: RgFunction) : FunctionDeclaration {
+        private val declarationResolver: DeclarationResolver,
+        private val typeResolver: TypeResolver,
+        private val function: RgFunction) : FunctionDeclaration {
 
     override val returnType: Type
         get() = _returnType.value
 
     private val _returnType = Lazy { typeResolver.checkFunctionReturnType(function, owningDeclaration.resolutionScope, owningDeclaration.resolutionScope) }
 
-    override val bodyResolutionScope: Scope
-        get() = _bodyResolutionScope.value
+    //override val resolutionScope: Scope
+    //    get() = bodyResolutionScope
 
-    private val _bodyResolutionScope = Lazy {
-        declarationResolver.resolveFunctionBodyScope(this, function)
+    fun doResolveBody() {
+        declarationResolver.resolveFunctionBody(function, this, owningDeclaration.resolutionScope)
     }
 
     override val resolutionScope: Scope
-        get() = bodyResolutionScope
+        get() = owningDeclaration.resolutionScope
 
     override fun forceFullResolve() {
         //_bodyResolutionScope.doResolve()
+        doResolveBody()
         _returnType.doResolve()
     }
 }

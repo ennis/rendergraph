@@ -38,8 +38,7 @@ import patapon.rendergraph.lang.types.TypeResolver
 fun resolvePath(path: RgPath, scope: Scope): Collection<Declaration> {
     return if (path is RgQualifiedPath) {
         TODO("resolve qualified paths")
-    }
-    else {
+    } else {
         val path = path as RgPathRoot
         scope.findDeclarations(path.identifier.text)
     }
@@ -73,7 +72,8 @@ class DeclarationResolver(
         val name = function.name
         val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, this, typeResolver, function)
         // resolve parameters
-        function.parameterList.forEachIndexed { index, param -> resolveValueParameter(param, index, decl, resolutionScope) }
+        val params = function.parameterList.mapIndexed { index, param -> resolveValueParameter(param, index, decl, resolutionScope) }
+
 
         /*if (owningDeclaration is ComponentDeclaration) {
             val inheritanceScope = owningDeclaration.inheritanceScope
@@ -87,34 +87,50 @@ class DeclarationResolver(
             }
         }*/
 
-        context.functionDeclarations.put(function, decl)
+        context.functionDeclarations[function] = decl
         return decl
     }
 
+    fun resolveFunctionBody(function: RgFunction, decl: FunctionDeclaration, resolutionScope: Scope) {
+        // build scope of parameters
+        val paramScope = SimpleScope(enclosingScope = resolutionScope) {
+            function.parameterList.forEach { param -> addDeclaration(context.valueParameters[param]!!) }
+        }
+
+        val functionBody = function.functionBody
+        if (functionBody != null) {
+            val blockBody = functionBody.blockBody
+            if (blockBody != null) {
+                typeResolver.checkBlock(decl, blockBody, paramScope)
+            } else {
+                val exprBody = functionBody.expressionBody
+                if (exprBody != null) {
+                    typeResolver.checkExpression(exprBody, paramScope)
+                } else {
+                    throw IllegalStateException("function has no body")
+                }
+            }
+        }
+
+    }
+
     private fun resolveValueParameter(param: RgParameter, index: Int, owningDeclaration: FunctionDeclaration, resolutionScope: Scope): ValueParameter {
-        val decl = ValueParameter(owningDeclaration, param.name ?: UNNAMED_VALUE_PARAMETER, typeResolver.resolveTypeReference(param.type!!, resolutionScope), index)
-        context.valueParameters.put(param, decl)
+        val decl = ValueParameter(owningDeclaration, param.name
+                ?: UNNAMED_VALUE_PARAMETER, typeResolver.resolveTypeReference(param.type!!, resolutionScope), index)
+        context.valueParameters[param] = decl
         return decl
     }
 
     fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope): VariableDeclaration {
         val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
-        context.variableDeclarations.put(variable, decl)
+        context.variableDeclarations[variable] = decl
         return decl
     }
 
     fun resolveComponentDeclaration(component: RgComponent, owningDeclaration: DeclarationWithResolutionScope): ComponentDeclaration {
         val decl = ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component, d)
-        context.componentDeclarations.put(component, decl)
+        context.componentDeclarations[component] = decl
         return decl
-    }
-
-    // Called when a function needs a scope for its body
-    fun resolveFunctionBodyScope(declaration: FunctionDeclaration, function: RgFunction): Scope {
-        // build a scope with the arguments
-        // also force resolve the parent scope
-        //return ScopeImpl(decl)
-        TODO()
     }
 
     // Build the resolution scope for a component declaration

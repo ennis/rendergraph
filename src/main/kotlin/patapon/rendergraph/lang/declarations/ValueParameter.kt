@@ -9,4 +9,4 @@ class ValueParameter(
         override val owningDeclaration: FunctionDeclaration,
         override val name: String,
         override val type: Type,
-        val index: Int): ValueDeclaration
+        val index: Int): VariableDeclaration

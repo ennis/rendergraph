@@ -9,7 +9,7 @@ interface BindingContext {
     val componentDeclarations: MutableMap<RgComponent, ComponentDeclaration>
     val variableDeclarations: MutableMap<RgVariable, VariableDeclaration>
     val functionDeclarations: MutableMap<RgFunction, FunctionDeclaration>
-    val valueParameters: MutableMap<RgParameter, ValueDeclaration>
+    val valueParameters: MutableMap<RgParameter, VariableDeclaration>
     val typeReferences: MutableMap<RgType, TypeDeclaration>
     // cache for results of name lookup of component bases (component _: B, C, D)
     //val componentBases: MutableMap<RgPath, ComponentDeclaration>
@@ -38,7 +38,7 @@ class BindingContextImpl: BindingContext
     override val componentDeclarations = mutableMapOf<RgComponent,ComponentDeclaration>()
     override val variableDeclarations = mutableMapOf<RgVariable, VariableDeclaration>()
     override val functionDeclarations = mutableMapOf<RgFunction, FunctionDeclaration>()
-    override val valueParameters = mutableMapOf<RgParameter, ValueDeclaration>()
+    override val valueParameters = mutableMapOf<RgParameter, VariableDeclaration>()
     override val expressionTypes = mutableMapOf<RgExpression, Type>()
     override val moduleDeclarations = mutableMapOf<RgModule, ModuleDeclaration>()
     override val typeReferences = mutableMapOf<RgType, TypeDeclaration>()

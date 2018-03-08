@@ -202,14 +202,16 @@ functionBody ::= block | '=' expression semi {
 }
 
 //====================================================================
-block ::= '{' statement* '}'
+block ::= '{' statement* expression? '}'    // trailing expression
+{
+    methods=[trailingExpression="expression"]
+}
 
 //====================================================================
 // statements
-private statement ::= emptyStatement | expression semi | variable
+statement ::= emptyStatement | expression semi | variable
 
 emptyStatement ::= semi {
-    implements = ["patapon.rendergraph.lang.psi.RgStatement"]
 }
 
 //====================================================================
@@ -236,7 +238,7 @@ prefixOp ::= '-' | '+' | '--' | '++' | '!'
 postfixOp ::= '--' | '++'
 
 assignment ::= expression assignOp expression
-{ extends=expression rightAssociative=true }
+{ extends=expression elementType=binaryExpression rightAssociative=true }
 
 disjunction ::= expression '||' expression
 { extends=expression elementType=binaryExpression }

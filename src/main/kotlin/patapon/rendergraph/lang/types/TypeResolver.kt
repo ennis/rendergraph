@@ -1,7 +1,6 @@
 package patapon.rendergraph.lang.types
 
-import patapon.rendergraph.lang.declarations.BindingContext
-import patapon.rendergraph.lang.declarations.TypeDeclaration
+import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.Diagnostics
 import patapon.rendergraph.lang.diagnostics.error
@@ -9,25 +8,25 @@ import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.Operator
 import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.Scope
+import patapon.rendergraph.lang.resolve.ensureUnique
 import patapon.rendergraph.lang.resolve.resolvePath
 
-enum class ValueCategory
-{
+enum class ValueCategory {
     LVALUE,
     RVALUE
 }
 
-class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
+class TypeResolver(private val context: BindingContext, private val d: DiagnosticSink) {
     fun checkVariableDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type {
         // we have a variable decl node, and we want to know its type:
         // if not found, resolve:
         // resolve the type annotation (get a resolution scope)
         //TODO()
         val typeAnnotation = variable.type
-        if (typeAnnotation != null) {
-            return resolveTypeReference(typeAnnotation, declarationResolutionScope)
+        return if (typeAnnotation != null) {
+            resolveTypeReference(typeAnnotation, declarationResolutionScope)
         } else {
-            return UnresolvedType
+            UnresolvedType
         }
     }
 
@@ -37,19 +36,20 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
             d.report(Diagnostics.UNDECLARED_IDENTIFIER.with(typeRef, typeRef.text))
             return UnresolvedType
         }
-        if (lookupResult.size > 1) {
+
+        return if (lookupResult.size > 1) {
             // Ambiguous result
             d.report(Diagnostics.AMBIGUOUS_TYPE_REFERENCE.with(typeRef, typeRef.text))
-            return UnresolvedType
+            UnresolvedType
         } else {
             val typeDecl = lookupResult.first() as? TypeDeclaration
             if (typeDecl != null) {
                 context.typeReferences[typeRef] = typeDecl
-                return typeDecl.type
+                typeDecl.type
             } else {
                 // Not a type declaration
                 d.report(Diagnostics.EXPECTED_X_FOUND_Y.with(typeRef, "type reference", typeRef.text))
-                return UnresolvedType
+                UnresolvedType
             }
         }
     }
@@ -62,28 +62,26 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         return UnresolvedType
     }
 
-    fun checkFunctionArgumentType(parameter: RgParameter, resolutionScope: Scope): Type {
-        return resolveTypeReference(parameter.type!!, resolutionScope)
-    }
-
-    fun compareTypes(typeA: Type, typeB: Type): Boolean {
+    private fun compareTypes(typeA: Type, typeB: Type): Boolean {
         // same instance: this works if both typeA and typeB are primitive types without qualifiers
-        if (typeA == typeB) {
-            return true
-        } else {
-            // TODO: more complex type checking
-            return false
-        }
+        // TODO: more complex type checking
+        return (typeA == typeB)
     }
 
-    fun getValueCategory(expr: RgExpression) = when (expr) {
+    private fun getValueCategory(expr: RgExpression) = when (expr) {
         is RgQualification -> ValueCategory.LVALUE
-        is RgBinaryExpression -> { if (expr.opType.isAssignment) { ValueCategory.LVALUE } else { ValueCategory.RVALUE } }
+        is RgBinaryExpression -> {
+            if (expr.opType.isAssignment) {
+                ValueCategory.LVALUE
+            } else {
+                ValueCategory.RVALUE
+            }
+        }
         is RgSimpleReferenceExpression -> ValueCategory.LVALUE
         else -> ValueCategory.RVALUE
     }
 
-    fun checkLiteralExpr(lit: RgLiteral): Type {
+    private fun checkLiteralExpr(lit: RgLiteral, resolutionScope: Scope): Type {
         val type = when (lit) {
             is RgFloatLiteral -> FloatType
             is RgIntLiteral -> IntegerType
@@ -96,58 +94,55 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         return type
     }
 
-    fun checkReturnExpr(expr: RgReturnExpression): NothingType {
+    private fun checkReturnExpr(expr: RgReturnExpression, resolutionScope: Scope): NothingType {
         // typecheck the return value
         val returnValueExpr = expr.expression
         if (returnValueExpr != null)
-            checkExpression(returnValueExpr)
+            checkExpression(returnValueExpr, resolutionScope)
         context.expressionTypes[expr] = NothingType
         return NothingType
     }
 
-    fun checkEqualityExprTypes(op: Operator, expr: RgBinaryExpression): Type {
-        val tyLeft = checkExpression(expr.left)
-        val tyRight = checkExpression(expr.right!!)
+    private fun checkEqualityExprTypes(op: Operator, expr: RgBinaryExpression, resolutionScope: Scope): Type {
+        val tyLeft = checkExpression(expr.left, resolutionScope)
+        val tyRight = checkExpression(expr.right!!, resolutionScope)
         val sameTypes = compareTypes(tyLeft, tyRight)
         if (!sameTypes) {
-            d.error("Wrong operand types to ${op}: left- and right-hand side have different types", expr)
+            d.error("Wrong operand types to $op: left- and right-hand side have different types", expr)
         }
         val tyResult = BooleanType
         context.expressionTypes[expr] = tyResult
         return tyResult
     }
 
-    fun checkArithmeticExpression(op: Operator, expr: RgBinaryExpression): Type {
+    private fun checkArithmeticExpression(op: Operator, expr: RgBinaryExpression, resolutionScope: Scope): Type {
         // TODO int to float implicit conversions, etc.
-        val tyLeft = checkExpression(expr.left)
-        val tyRight = checkExpression(expr.right!!)
+        val tyLeft = checkExpression(expr.left, resolutionScope)
+        val tyRight = checkExpression(expr.right!!, resolutionScope)
         val sameTypes = compareTypes(tyLeft, tyRight)
         if (!sameTypes) {
-            d.error("Wrong operand types to ${op}: left- and right-hand side have different types", expr)
+            d.error("Wrong operand types to $op: left- and right-hand side have different types", expr)
             return UnresolvedType
         }
 
-        val tyResult = tyLeft
-        context.expressionTypes[expr] = tyResult
-        return tyResult
+        context.expressionTypes[expr] = tyLeft
+        return tyLeft
     }
 
-    fun checkBinaryExpression(expr: RgBinaryExpression): Type {
-        // TYPECHECK: left and right subexpressions must have the same types
+    private fun checkBinaryExpression(expr: RgBinaryExpression, resolutionScope: Scope): Type {
         val op = expr.opType
-
-        val tyResult = when (op) {
-            Operator.ADD -> checkArithmeticExpression(op, expr)
-            Operator.SUB -> checkArithmeticExpression(op, expr)
-            Operator.MUL -> checkArithmeticExpression(op, expr)
-            Operator.DIV -> checkArithmeticExpression(op, expr)
+        return when (expr.opType) {
+            Operator.ADD -> checkArithmeticExpression(op, expr, resolutionScope)
+            Operator.SUB -> checkArithmeticExpression(op, expr, resolutionScope)
+            Operator.MUL -> checkArithmeticExpression(op, expr, resolutionScope)
+            Operator.DIV -> checkArithmeticExpression(op, expr, resolutionScope)
             Operator.REM -> TODO()
             Operator.BIT_AND -> TODO()
             Operator.BIT_OR -> TODO()
             Operator.BIT_XOR -> TODO()
             Operator.SHL -> TODO()
             Operator.SHR -> TODO()
-            Operator.ASSIGN -> checkAssignExpression(expr)
+            Operator.ASSIGN -> checkAssignExpression(expr, resolutionScope)
             Operator.ADD_ASSIGN -> TODO()
             Operator.SUB_ASSIGN -> TODO()
             Operator.MUL_ASSIGN -> TODO()
@@ -158,21 +153,18 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
             Operator.BIT_XOR_ASSIGN -> TODO()
             Operator.SHL_ASSIGN -> TODO()
             Operator.SHR_ASSIGN -> TODO()
-            Operator.EQ -> checkEqualityExprTypes(op, expr)
-            Operator.NOT_EQ -> checkEqualityExprTypes(op, expr)
+            Operator.EQ -> checkEqualityExprTypes(op, expr, resolutionScope)
+            Operator.NOT_EQ -> checkEqualityExprTypes(op, expr, resolutionScope)
             Operator.LT -> TODO()
             Operator.LTEQ -> TODO()
             Operator.GT -> TODO()
             Operator.GTEQ -> TODO()
         }
-
-        return tyResult
     }
 
-    private fun checkAssignExpression(expr: RgBinaryExpression): Type
-    {
-        val tyLeft = checkExpression(expr.left)
-        val tyRight = checkExpression(expr.right!!)
+    private fun checkAssignExpression(expr: RgBinaryExpression, resolutionScope: Scope): Type {
+        val tyLeft = checkExpression(expr.left, resolutionScope)
+        val tyRight = checkExpression(expr.right!!, resolutionScope)
 
         if (getValueCategory(expr.left) != ValueCategory.LVALUE) {
             d.error("Left side of assignment is not an lvalue", expr.left)
@@ -185,19 +177,79 @@ class TypeResolver(val context: BindingContext, val d: DiagnosticSink) {
         return tyLeft
     }
 
-    private fun checkQualification(expr: RgQualification): Type {
+    private fun checkQualification(expr: RgQualification, resolutionScope: Scope): Type {
         val left = expr.expression
-        val tyLeft = checkExpression(left)
+        val tyLeft = checkExpression(left, resolutionScope)
         TODO()
     }
 
-    fun checkExpression(expr: RgExpression): Type {
+    fun checkExpression(expr: RgExpression, resolutionScope: Scope): Type {
         return when (expr) {
-            is RgBinaryExpression -> checkBinaryExpression(expr)
-            is RgReturnExpression -> checkReturnExpr(expr)
-            is RgLiteral -> checkLiteralExpr(expr)
+            is RgBinaryExpression -> checkBinaryExpression(expr, resolutionScope)
+            is RgReturnExpression -> checkReturnExpr(expr, resolutionScope)
+            is RgLiteral -> checkLiteralExpr(expr, resolutionScope)
+            is RgQualification -> checkQualification(expr, resolutionScope)
+            is RgSimpleReferenceExpression -> checkSimpleReference(expr, resolutionScope)
             else -> TODO()
         }
+    }
+
+    private fun checkSimpleReference(ref: RgSimpleReferenceExpression, resolutionScope: Scope): Type {
+        val name = ref.identifier.text
+        val lookupResult = resolutionScope.findDeclarations(name)
+
+        val ty = if (lookupResult.isEmpty()) {
+            d.error("Undeclared identifier: $name", ref)
+            UnresolvedType
+        }
+        else if (lookupResult.size > 1) {
+            d.error("Ambiguous reference: $name", ref)
+            UnresolvedType
+        }
+        else {
+            val decl = lookupResult.first()
+            if (decl !is VariableDeclaration) {
+                d.error("$name does not name a variable", ref)
+                UnresolvedType
+            }
+            else {
+                decl.type
+            }
+        }
+
+        context.expressionTypes[ref] = ty
+        return ty
+    }
+
+    fun checkBlock(owningDeclaration: DeclarationWithResolutionScope, block: RgBlock, resolutionScope: Scope): Type {
+        class BindingScope(val parent: Scope, val decl: VariableDeclaration) : Scope {
+            override fun findDeclarations(name: String): Collection<Declaration> {
+                return if (name == decl.name) {
+                    listOf(decl)
+                } else parent.findDeclarations(name)
+            }
+
+            override fun getAllDeclarations(): Collection<Declaration> {
+                val decls = mutableListOf<Declaration>(decl)
+                parent.getAllDeclarations().toCollection(decls)
+                return decls
+            }
+        }
+
+        var curScope = resolutionScope
+
+        block.statementList.forEach { stmt ->
+            stmt.expression?.let { expr -> checkExpression(expr, curScope) }
+            stmt.variable?.let { variable ->
+                val varDecl = VariableDeclarationImpl(owningDeclaration, variable.name!!, this, variable)
+                val varType = checkVariableDeclaration(variable, curScope, curScope)
+                // introduce new binding
+                curScope = BindingScope(curScope, varDecl)
+            }
+            stmt.emptyStatement?.let { /* nothing to do */ }
+        }
+
+        return UnitType
     }
 
 }
