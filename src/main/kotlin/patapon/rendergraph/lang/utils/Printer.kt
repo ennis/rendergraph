@@ -1,26 +1,26 @@
 package patapon.rendergraph.lang.utils
 
-class Printer(private val outString: StringBuilder) {
+class Printer(val builder: StringBuilder) {
     private var indent = 0
     private var mustIndent = false
 
     private fun printIndent()
     {
         for (i in 0 until indent*2) {
-            outString.append(' ')
+            builder.append(' ')
         }
     }
 
     fun appendln(ln: String)
     {
         if (mustIndent) printIndent()
-        outString.appendln(ln)
+        builder.appendln(ln)
         mustIndent = true
     }
 
     fun appendln()
     {
-        outString.appendln()
+        builder.appendln()
         mustIndent = true
     }
 
@@ -28,7 +28,7 @@ class Printer(private val outString: StringBuilder) {
     {
         if (mustIndent) printIndent()
         mustIndent = false
-        outString.append(str)
+        builder.append(str)
     }
 
     fun withIndent(body: () -> Unit)

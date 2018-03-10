@@ -8,7 +8,6 @@ import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.Operator
 import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.Scope
-import patapon.rendergraph.lang.resolve.ensureUnique
 import patapon.rendergraph.lang.resolve.resolvePath
 
 enum class ValueCategory {
@@ -213,6 +212,7 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
                 UnresolvedType
             }
             else {
+                context.simpleReferences[ref] = decl
                 decl.type
             }
         }
@@ -251,6 +251,5 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
 
         return UnitType
     }
-
 }
 

@@ -88,12 +88,41 @@ class PrettyPrinterVisitor(
         p.appendln()
     }
 
+    override fun visitFunctionBody(o: RgFunctionBody) {
+        p.append("FunctionBody${o.textRange}")
+        p.appendln()
+        p.withIndent {
+            o.acceptChildren(this)
+        }
+    }
+
+    override fun visitBlock(o: RgBlock) {
+        p.append("Block${o.textRange}")
+        p.appendln()
+        p.withIndent {
+            o.acceptChildren(this)
+        }
+    }
+
+    override fun visitStatement(o: RgStatement) {
+        p.append("Statement${o.textRange}")
+        p.appendln()
+        p.withIndent {
+            o.acceptChildren(this)
+        }
+    }
+
+    override fun visitEmptyStatement(o: RgEmptyStatement) {
+        p.append("EmptyStatement${o.textRange}")
+        p.appendln()
+    }
+
     override fun visitBinaryExpression(o: RgBinaryExpression) {
         val type = context.expressionTypes[o]
 
         p.append("BinaryExpression${o.textRange} op=${o.opType}")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
 
@@ -107,7 +136,7 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("ParensExpression${o.textRange}")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
 
@@ -118,9 +147,11 @@ class PrettyPrinterVisitor(
 
     override fun visitSimpleReferenceExpression(o: RgSimpleReferenceExpression) {
         val type = context.expressionTypes[o]
+        val ref = context.simpleReferences[o]
         p.append("SimpleReferenceExpression${o.textRange} ident='${o.identifier.text}'")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
+        ref?.let { p.append(" ref=$it") }
 
         p.appendln()
     }
@@ -129,7 +160,7 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("FloatLiteral${o.textRange} raw='${o.text}' ")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
     }
@@ -138,7 +169,7 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("DoubleLiteral${o.textRange} raw='${o.text}' ")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
     }
@@ -147,7 +178,7 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("IntLiteral${o.textRange} raw='${o.text}' ")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
     }
@@ -156,7 +187,8 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("ReturnExpression${o.textRange}")
 
-        if (type != null) { p.append(" type=$type") }
+
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
 
@@ -169,7 +201,8 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("QualificationExpression${o.textRange} ident='${o.identifier.text}'")
 
-        if (type != null) { p.append(" type=$type") }
+
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
 
@@ -182,7 +215,7 @@ class PrettyPrinterVisitor(
         val type = context.expressionTypes[o]
         p.append("IfExpression${o.textRange}")
 
-        if (type != null) { p.append(" type=$type") }
+        type?.let { p.append(" type=$it") }
 
         p.appendln()
 
