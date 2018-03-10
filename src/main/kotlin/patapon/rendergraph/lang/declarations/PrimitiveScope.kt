@@ -31,7 +31,10 @@ object PrimitiveScope: Scope {
             primitiveTypeDecl(BooleanType),
             primitiveTypeDecl(Vec2Type),
             primitiveTypeDecl(Vec3Type),
-            primitiveTypeDecl(Vec4Type)
+            primitiveTypeDecl(Vec4Type),
+            primitiveTypeDecl(Mat2x2Type),
+            primitiveTypeDecl(Mat3x3Type),
+            primitiveTypeDecl(Mat4x4Type)
         )
     }()
 }
