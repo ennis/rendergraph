@@ -2,7 +2,9 @@ package patapon.rendergraph.ide.annotators
 
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.psi.PsiElement
 import patapon.rendergraph.ide.colors.RenderGraphColors
 import patapon.rendergraph.lang.psi.*
@@ -10,8 +12,11 @@ import patapon.rendergraph.lang.psi.ext.RgRenderPassItem
 
 class RenderGraphHighlightingAnnotator: Annotator
 {
-    override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+    companion object {
+        val LOG = Logger.getInstance(RenderGraphHighlightingAnnotator::class.java)
+    }
 
+    override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         var textAttributes = when(element) {
             is RgAttribute -> RenderGraphColors.ATTRIBUTE.textAttributesKey
             is RgRenderPassItem -> RenderGraphColors.RENDER_PASS_ITEM.textAttributesKey

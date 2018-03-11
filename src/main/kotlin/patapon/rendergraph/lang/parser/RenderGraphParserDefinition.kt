@@ -2,6 +2,7 @@ package patapon.rendergraph.lang.parser
 
 import com.intellij.lang.*
 import com.intellij.lexer.Lexer
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.tree.*
@@ -15,6 +16,7 @@ class RenderGraphParserDefinition : ParserDefinition {
         val WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE, RgTokenType.EOL)
         val COMMENTS = TokenSet.create(RgTokenType.BLOCK_COMMENT, RgTokenType.EOL_COMMENT)
         val FILE = IFileElementType(RenderGraphLanguage.INSTANCE)
+        val LOG = Logger.getInstance(RenderGraphParserDefinition::class.java)
     }
 
     override fun createLexer(project: Project): Lexer {
@@ -34,6 +36,7 @@ class RenderGraphParserDefinition : ParserDefinition {
     }
 
     override fun createParser(project: Project): PsiParser {
+        LOG.info("CREATE PARSER")
         return RenderGraphParser()
     }
 

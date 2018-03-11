@@ -55,7 +55,7 @@ class ComponentDeclarationImpl(
     override val inheritanceScope: Scope
         get() = members
 
-    override val resolutionScope = ChainedScope(inheritanceScope, owningDeclaration.resolutionScope)
+    override val resolutionScope get() = ChainedScope(inheritanceScope, owningDeclaration.resolutionScope)
 
     override val members = object : LazyMemberScope(this, component, d) {
         override fun resolveDeclaration(o: RgDeclaration): Declaration? {
@@ -71,7 +71,6 @@ class ComponentDeclarationImpl(
     override fun forceFullResolve() {
         members.getAllDeclarations().forceFullResolve()
     }
-
 }
 
 

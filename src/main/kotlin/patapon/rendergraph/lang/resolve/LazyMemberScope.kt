@@ -35,7 +35,7 @@ abstract class LazyMemberScope(
     // because the rules vary between different kinds of scopes
     private fun resolve(name: String): Collection<Declaration> {
         // find all PSI declaration elements that match by name
-        val matching = PsiTreeUtil.findChildrenOfType(scopeParentElement, RgNamedDeclaration::class.java)
+        val matching = scopeParentElement.children.filterIsInstance(RgNamedDeclaration::class.java)
                 .filter { it.name == name }
                 .mapNotNull { resolveDeclaration(it) }
 
