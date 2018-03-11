@@ -28,7 +28,7 @@ class ModuleDeclarationImpl(
             return when (o) {
                 is RgFunction -> declarationResolver.resolveFunctionDeclaration(o, this@ModuleDeclarationImpl, resolutionScope)
                 is RgComponent -> declarationResolver.resolveComponentDeclaration(o, this@ModuleDeclarationImpl)
-                is RgVariable -> declarationResolver.resolveVariableDeclaration(o, this@ModuleDeclarationImpl)
+                is RgVariable -> declarationResolver.resolveVariableDeclaration(o, this@ModuleDeclarationImpl, resolutionScope)
                 else -> null
             }
         }

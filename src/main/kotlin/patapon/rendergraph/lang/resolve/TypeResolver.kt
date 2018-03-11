@@ -35,14 +35,6 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
         }
     }
 
-    fun checkFunctionReturnType(function: RgFunction, declarationResolutionScope: Scope, bodyResolutionScope: Scope): Type {
-        val returnType = function.returnType
-        if (returnType != null) {
-            return referenceResolver.resolveTypeReference(returnType, declarationResolutionScope)
-        }
-        return UnresolvedType
-    }
-
     private fun compareTypes(typeA: Type, typeB: Type): Boolean {
         // same instance: this works if both typeA and typeB are primitive types without qualifiers
         // TODO: more complex type checking
@@ -84,7 +76,7 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
         if (containingDecl != null && containingDecl is RgFunction) {
             // check return type against provided type in function signature
             val functionDecl = context.functionDeclarations[containingDecl]!!
-            functionDecl.returnType
+           // functionDecl.returnType
 
         } else {
             d.error("Return not allowed here")
@@ -211,8 +203,8 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
         block.statementList.forEach { stmt ->
             stmt.expression?.let { expr -> checkExpression(expr, curScope) }
             stmt.variable?.let { variable ->
-                val varDecl = VariableDeclarationImpl(owningDeclaration, variable.name!!, this, variable)
                 val varType = checkVariableDeclaration(variable, curScope, curScope)
+                val varDecl = VariableDeclarationImpl(owningDeclaration, variable.name!!, varType, curScope)
                 // introduce new binding
                 curScope = BindingScope(curScope, varDecl)
             }
@@ -221,5 +213,10 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
 
         return UnitType
     }
-}
 
+    fun getExpressionType(expr: RgExpression, resolutionScope: Scope): Type {
+        return context.expressionTypes.getOrElse(expr) {
+            checkExpression(expr, resolutionScope)
+        }
+    }
+}

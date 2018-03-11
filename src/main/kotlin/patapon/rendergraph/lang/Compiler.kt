@@ -13,6 +13,7 @@ import patapon.rendergraph.lang.utils.PrettyPrinterVisitor
 import patapon.rendergraph.lang.psi.RgFile
 import patapon.rendergraph.lang.psi.RgModule
 import patapon.rendergraph.lang.psi.RgVisitor
+import patapon.rendergraph.lang.resolve.BodyResolver
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.resolve.ReferenceResolver
 import patapon.rendergraph.lang.resolve.TypeResolver
@@ -77,17 +78,12 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
         val referenceResolver = ReferenceResolver(bindingContext, diagnosticSink)
         val typeResolver = TypeResolver(bindingContext, referenceResolver, diagnosticSink)
         val declarationResolver = DeclarationResolver(bindingContext, referenceResolver, typeResolver, diagnosticSink)
-
-        val moduleResolverVisitor = object : RgVisitor() {
-            override fun visitModule(o: RgModule) {
-                val decl = declarationResolver.resolveModuleDeclaration(o)
-                decl.forceFullResolve()
-            }
-        }
-        file.acceptChildren(moduleResolverVisitor)
+        file.acceptChildren(declarationResolver)
+        val bodyResolver = BodyResolver(typeResolver, bindingContext, diagnosticSink)
+        file.acceptChildren(bodyResolver)
 
         val ppBuffer = StringBuilder()
-        val prettyPrinter = PrettyPrinterVisitor(declarationResolver, bindingContext, typeResolver, ppBuffer)
+        val prettyPrinter = PrettyPrinterVisitor(bindingContext, ppBuffer)
         file.acceptChildren(prettyPrinter)
         val glslBuffer = StringBuilder()
         val glslGenerator = GLSLGenerator(bindingContext, Printer(glslBuffer))
@@ -104,7 +100,7 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
 
         val sourceList = arrayListOf<VirtualFile>()
         sourceRoots.forEach { sourceRoot ->
-            LOG.info("\t${sourceRoot}")
+            LOG.info("\t$sourceRoot")
             traverseDirectory(sourceRoot, sourceList)
         }
 
@@ -117,7 +113,6 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
             if (psi != null) {
                 val rgpsi = psi as RgFile
                 // PSI found
-                LOG.info("PSI: [${vf}], ${rgpsi.children.size} root nodes")
                 compileFile(rgpsi)
             } else {
                 TODO("Handle not-yet-generated PSIs")

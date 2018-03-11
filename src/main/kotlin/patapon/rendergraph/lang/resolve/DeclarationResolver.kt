@@ -3,18 +3,21 @@ package patapon.rendergraph.lang.resolve
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*
+import patapon.rendergraph.lang.types.DeferredType
+import patapon.rendergraph.lang.types.UnitType
+import patapon.rendergraph.lang.types.UnresolvedType
 
 // Responsible for resolving the contents of declarations with resolution scopes (components, functions, constants with initializers...)
 class DeclarationResolver(
         private val context: BindingContext,
         private val referenceResolver: ReferenceResolver,
         private val typeResolver: TypeResolver,
-        private val d: DiagnosticSink) : RgVisitor() {
-    /*fun resolveModulePath(path: RgPath, scope: Scope): ModuleDeclaration
-    {
-        // first, resolve parent module
-        PsiTreeUtil.findChildrenOfType(path, PsiIdentifier::class.java).toTypedArray().dropLast(1)
-    }*/
+        private val d: DiagnosticSink) : RgVisitor()
+{
+    override fun visitModule(o: RgModule) {
+        val decl = resolveModuleDeclaration(o)
+        decl.forceFullResolve()
+    }
 
     fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration {
         return context.moduleDeclarations.getOrPut(mod) {
@@ -27,28 +30,50 @@ class DeclarationResolver(
             owningDeclaration: DeclarationWithResolutionScope,
             resolutionScope: Scope): FunctionDeclaration {
         val name = function.name
-        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, this, typeResolver, function)
-        // resolve parameters
-        val params = function.parameterList.mapIndexed { index, param -> resolveValueParameter(param, index, decl, resolutionScope) }
+        val returnTypeAnnotation = function.returnType
+
+        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION)
+
+        // build scope of parameters
+        val paramScope = SimpleScope(enclosingScope = resolutionScope) {
+            function.parameterList.forEachIndexed { i,param -> addDeclaration(resolveValueParameter(param, i, decl, resolutionScope)) }
+        }
+
+        val returnType = if (returnTypeAnnotation != null) {
+                // function has a return type annotation
+                referenceResolver.resolveTypeReference(returnTypeAnnotation, resolutionScope)
+            } else {
+                val body = function.functionBody
+                if (body != null) {
+                    val exprBody = body.expressionBody
+                    if (exprBody != null) {
+                        DeferredType {
+                            typeResolver.getExpressionType(exprBody, paramScope)
+                        }
+                    } else {
+                        UnitType
+                    }
+                } else {
+                    UnitType
+                }
+            }
+
+        decl.bodyResolutionScope = paramScope
+        decl.returnType = returnType
         context.functionDeclarations[function] = decl
         return decl
     }
 
     fun resolveFunctionBody(function: RgFunction, decl: FunctionDeclaration, resolutionScope: Scope) {
-        // build scope of parameters
-        val paramScope = SimpleScope(enclosingScope = resolutionScope) {
-            function.parameterList.forEach { param -> addDeclaration(context.valueParameters[param]!!) }
-        }
-
         val functionBody = function.functionBody
         if (functionBody != null) {
             val blockBody = functionBody.blockBody
             if (blockBody != null) {
-                typeResolver.checkBlock(decl, blockBody, paramScope)
+                typeResolver.checkBlock(decl, blockBody, resolutionScope)
             } else {
                 val exprBody = functionBody.expressionBody
                 if (exprBody != null) {
-                    typeResolver.checkExpression(exprBody, paramScope)
+                    typeResolver.checkExpression(exprBody, resolutionScope)
                 } else {
                     throw IllegalStateException("function has no body")
                 }
@@ -63,8 +88,22 @@ class DeclarationResolver(
         return decl
     }
 
-    fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope): VariableDeclaration {
-        val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, typeResolver, variable)
+    fun resolveVariableDeclaration(variable: RgVariable, owningDeclaration: DeclarationWithResolutionScope, resolutionScope: Scope): VariableDeclaration {
+        val typeAnnotation = variable.type
+        val type = if (typeAnnotation != null) {
+            referenceResolver.resolveTypeReference(typeAnnotation, resolutionScope)
+        } else {
+            val initializer = variable.initializer
+            if (initializer != null) {
+                DeferredType {
+                    typeResolver.getExpressionType(initializer, resolutionScope)
+                }
+            } else {
+                UnresolvedType
+            }
+        }
+
+        val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, type, owningDeclaration.resolutionScope)
         context.variableDeclarations[variable] = decl
         return decl
     }

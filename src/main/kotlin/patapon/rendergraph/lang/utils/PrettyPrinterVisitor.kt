@@ -8,9 +8,7 @@ import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.resolve.TypeResolver
 
 class PrettyPrinterVisitor(
-        private val declarationResolver: DeclarationResolver,
         private val context: BindingContext,
-        private val typeResolver: TypeResolver,
         outString: StringBuilder): RgVisitor()
 {
 
@@ -51,7 +49,9 @@ class PrettyPrinterVisitor(
 
         p.append("Variable${o.textRange} '${o.name}'")
 
-        if (decl != null) { p.append(" name='${decl.name}'") }
+        if (decl != null)  {
+            p.append(" name='${decl.name}' type=${decl.type}")
+        }
         else { p.append(" <unresolved>") }
 
         p.appendln()
