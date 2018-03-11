@@ -2,6 +2,7 @@ package patapon.rendergraph.lang.utils
 
 import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.declarations.BindingContext
+import patapon.rendergraph.lang.declarations.getFullyQualifiedName
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.DeclarationResolver
@@ -150,7 +151,7 @@ class PrettyPrinterVisitor(
         p.append("SimpleReferenceExpression${o.textRange} ident='${o.identifier.text}'")
 
         type?.let { p.append(" type=$it") }
-        ref?.let { p.append(" ref=$it") }
+        ref?.let { p.append(" ref=${it.getFullyQualifiedName()}") }
 
         p.appendln()
     }
