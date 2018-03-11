@@ -5,7 +5,7 @@ import patapon.rendergraph.lang.declarations.BindingContext
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.opType
 import patapon.rendergraph.lang.resolve.DeclarationResolver
-import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.resolve.TypeResolver
 
 class PrettyPrinterVisitor(
         private val declarationResolver: DeclarationResolver,

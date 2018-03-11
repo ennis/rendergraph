@@ -73,4 +73,13 @@ Rg*Impl (generated)
     * stable AST output
     * stable context output
     * DONE global scope for identifiers
-    
+
+* Reorganize TypeResolver/DescriptorResolver
+    * name resolution (scope lookup)
+    * type checking of expressions (needs scope lookup)
+    * creation of declaration nodes (== resolution)
+
+* DeclarationResolver: create/check declaration nodes from PSI
+* BlockResolver: check statements
+* TypeChecker: infer types
+* various utility methods: name resolution 

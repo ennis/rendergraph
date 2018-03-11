@@ -2,9 +2,9 @@ package patapon.rendergraph.lang.declarations
 
 import patapon.rendergraph.lang.psi.RgFunction
 import patapon.rendergraph.lang.resolve.DeclarationResolver
+import patapon.rendergraph.lang.resolve.TypeResolver
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.types.Type
-import patapon.rendergraph.lang.types.TypeResolver
 import patapon.rendergraph.lang.utils.Lazy
 
 
@@ -17,8 +17,8 @@ class FunctionDeclarationImpl(
         override val name: String,
         private val declarationResolver: DeclarationResolver,
         private val typeResolver: TypeResolver,
-        private val function: RgFunction) : FunctionDeclaration {
-
+        private val function: RgFunction) : FunctionDeclaration
+{
     override val returnType: Type
         get() = _returnType.value
 

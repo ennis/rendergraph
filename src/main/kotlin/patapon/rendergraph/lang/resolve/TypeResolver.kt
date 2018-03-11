@@ -1,21 +1,21 @@
-package patapon.rendergraph.lang.types
+package patapon.rendergraph.lang.resolve
 
+import com.intellij.psi.util.PsiTreeUtil
 import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
-import patapon.rendergraph.lang.diagnostics.Diagnostics
 import patapon.rendergraph.lang.diagnostics.error
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.psi.ext.Operator
 import patapon.rendergraph.lang.psi.ext.opType
-import patapon.rendergraph.lang.resolve.Scope
-import patapon.rendergraph.lang.resolve.resolvePath
+import patapon.rendergraph.lang.types.*
 
-enum class ValueCategory {
-    LVALUE,
-    RVALUE
-}
+class TypeResolver(private val context: BindingContext, private val referenceResolver: ReferenceResolver, private val d: DiagnosticSink)
+{
+    enum class ValueCategory {
+        LVALUE,
+        RVALUE
+    }
 
-class TypeResolver(private val context: BindingContext, private val d: DiagnosticSink) {
     fun checkVariableDeclaration(variable: RgVariable, declarationResolutionScope: Scope, initializerResolutionScope: Scope): Type {
         // we have a variable decl node, and we want to know its type:
         // if not found, resolve:
@@ -23,31 +23,13 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
         //TODO()
         val typeAnnotation = variable.type
         return if (typeAnnotation != null) {
-            resolveTypeReference(typeAnnotation, declarationResolutionScope)
+            referenceResolver.resolveTypeReference(typeAnnotation, declarationResolutionScope)
         } else {
-            UnresolvedType
-        }
-    }
-
-    fun resolveTypeReference(typeRef: RgType, resolutionScope: Scope): Type {
-        val lookupResult = resolvePath(typeRef.path, resolutionScope)
-        if (lookupResult.isEmpty()) {
-            d.report(Diagnostics.UNDECLARED_IDENTIFIER.with(typeRef, typeRef.text))
-            return UnresolvedType
-        }
-
-        return if (lookupResult.size > 1) {
-            // Ambiguous result
-            d.report(Diagnostics.AMBIGUOUS_TYPE_REFERENCE.with(typeRef, typeRef.text))
-            UnresolvedType
-        } else {
-            val typeDecl = lookupResult.first() as? TypeDeclaration
-            if (typeDecl != null) {
-                context.typeReferences[typeRef] = typeDecl
-                typeDecl.type
+            val initializer = variable.initializer
+            if (initializer != null) {
+                checkExpression(initializer,initializerResolutionScope)
             } else {
-                // Not a type declaration
-                d.report(Diagnostics.EXPECTED_X_FOUND_Y.with(typeRef, "type reference", typeRef.text))
+                d.error("Cannot deduce local variable type without type annotation or initializer", variable)
                 UnresolvedType
             }
         }
@@ -56,7 +38,7 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
     fun checkFunctionReturnType(function: RgFunction, declarationResolutionScope: Scope, bodyResolutionScope: Scope): Type {
         val returnType = function.returnType
         if (returnType != null) {
-            return resolveTypeReference(returnType, declarationResolutionScope)
+            return referenceResolver.resolveTypeReference(returnType, declarationResolutionScope)
         }
         return UnresolvedType
     }
@@ -94,11 +76,20 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
     }
 
     private fun checkReturnExpr(expr: RgReturnExpression, resolutionScope: Scope): NothingType {
-        // typecheck the return value
-        val returnValueExpr = expr.expression
-        if (returnValueExpr != null)
-            checkExpression(returnValueExpr, resolutionScope)
+        val returnExprType = expr.expression?.let { checkExpression(it, resolutionScope) }
         context.expressionTypes[expr] = NothingType
+
+        // are we in a function?
+        val containingDecl = PsiTreeUtil.getParentOfType(expr, RgDeclaration::class.java)
+        if (containingDecl != null && containingDecl is RgFunction) {
+            // check return type against provided type in function signature
+            val functionDecl = context.functionDeclarations[containingDecl]!!
+            functionDecl.returnType
+
+        } else {
+            d.error("Return not allowed here")
+        }
+
         return NothingType
     }
 
@@ -194,29 +185,8 @@ class TypeResolver(private val context: BindingContext, private val d: Diagnosti
     }
 
     private fun checkSimpleReference(ref: RgSimpleReferenceExpression, resolutionScope: Scope): Type {
-        val name = ref.identifier.text
-        val lookupResult = resolutionScope.findDeclarations(name)
-
-        val ty = if (lookupResult.isEmpty()) {
-            d.error("Undeclared identifier: $name", ref)
-            UnresolvedType
-        }
-        else if (lookupResult.size > 1) {
-            d.error("Ambiguous reference: $name", ref)
-            UnresolvedType
-        }
-        else {
-            val decl = lookupResult.first()
-            if (decl !is VariableDeclaration) {
-                d.error("$name does not name a variable", ref)
-                UnresolvedType
-            }
-            else {
-                context.simpleReferences[ref] = decl
-                decl.type
-            }
-        }
-
+        val decl = referenceResolver.resolveSimpleVariableReference(ref, resolutionScope)
+        val ty = decl?.type ?: UnresolvedType
         context.expressionTypes[ref] = ty
         return ty
     }

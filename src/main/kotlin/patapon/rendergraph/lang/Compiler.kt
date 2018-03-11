@@ -14,7 +14,8 @@ import patapon.rendergraph.lang.psi.RgFile
 import patapon.rendergraph.lang.psi.RgModule
 import patapon.rendergraph.lang.psi.RgVisitor
 import patapon.rendergraph.lang.resolve.DeclarationResolver
-import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.resolve.ReferenceResolver
+import patapon.rendergraph.lang.resolve.TypeResolver
 import patapon.rendergraph.lang.utils.Printer
 
 // Compiler parameters
@@ -73,8 +74,9 @@ class Compiler(val compilerArguments: CompilerArguments, val project: Project) {
 
 
         val bindingContext = BindingContextImpl()
-        val typeResolver = TypeResolver(bindingContext, diagnosticSink)
-        val declarationResolver = DeclarationResolver(bindingContext, typeResolver, diagnosticSink)
+        val referenceResolver = ReferenceResolver(bindingContext, diagnosticSink)
+        val typeResolver = TypeResolver(bindingContext, referenceResolver, diagnosticSink)
+        val declarationResolver = DeclarationResolver(bindingContext, referenceResolver, typeResolver, diagnosticSink)
 
         val moduleResolverVisitor = object : RgVisitor() {
             override fun visitModule(o: RgModule) {

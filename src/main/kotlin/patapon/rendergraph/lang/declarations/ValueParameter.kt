@@ -1,7 +1,7 @@
 package patapon.rendergraph.lang.declarations
 
 import patapon.rendergraph.lang.types.Type
-import patapon.rendergraph.lang.types.TypeResolver
+import patapon.rendergraph.lang.resolve.TypeResolver
 import patapon.rendergraph.lang.psi.RgParameter
 import patapon.rendergraph.lang.utils.Lazy
 
