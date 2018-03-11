@@ -37,7 +37,7 @@ class DebugAnnotator: Annotator {
                     val diags = getDiagnosticsForElement(element)
                     diags.forEach {
                         when (it.severity) {
-                            Severity.TRACE -> {}
+                            Severity.TRACE -> holder.createInfoAnnotation(element, it.message)
                             Severity.INFO -> holder.createInfoAnnotation(element, it.message)
                             Severity.WARNING -> holder.createWarningAnnotation(element, it.message)
                             Severity.ERROR -> holder.createErrorAnnotation(element, it.message)
@@ -63,6 +63,10 @@ class DebugAnnotatorVisitor(
     }
 
     override fun visitFunction(o: RgFunction) {
+        val decl = bindingContext.functionDeclarations[o]
+        if (decl != null) {
+            holder.createInfoAnnotation(o, decl.signature.toString())
+        }
         super.visitFunction(o)
     }
 
@@ -93,6 +97,10 @@ class DebugAnnotatorVisitor(
     }
 
     override fun visitVariable(o: RgVariable) {
+        val decl = bindingContext.variableDeclarations[o]
+        if (decl != null) {
+            holder.createInfoAnnotation(o, decl.type.unwrap().toString())
+        }
         super.visitVariable(o)
     }
 

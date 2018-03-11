@@ -84,7 +84,7 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
            // functionDecl.returnType
 
         } else {
-            d.error("Return not allowed here")
+            d.error("Return not allowed here", expr)
         }
 
         return NothingType
