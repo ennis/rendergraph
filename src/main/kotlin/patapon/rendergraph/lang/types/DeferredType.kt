@@ -2,10 +2,9 @@ package patapon.rendergraph.lang.types
 
 import patapon.rendergraph.lang.utils.Lazy
 
-class DeferredType(compute: () -> Type): Type {
-    val typeLazy = Lazy { compute() }
+class DeferredType(compute: () -> Type): WrappedType {
+    private val typeLazy = Lazy { compute() }
 
-    fun compute(): Type = typeLazy.value
     val isComputed = typeLazy.isResolved
 
     override fun toString(): String {
@@ -15,5 +14,10 @@ class DeferredType(compute: () -> Type): Type {
         else {
             "DeferredType(${typeLazy.value})"
         }
+    }
+
+    override fun unwrap(): UnwrappedType {
+        // can nest several deferred types?
+        return typeLazy.value.unwrap()
     }
 }

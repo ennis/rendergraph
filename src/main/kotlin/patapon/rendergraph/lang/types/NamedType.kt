@@ -1,6 +1,10 @@
 package patapon.rendergraph.lang.types
 
-abstract class NamedType: Type {
-    abstract val name: String
+interface NamedType: Type
+{
+    val name: String
+}
+
+abstract class NamedTypeImpl(override val name: String): NamedType {
     override fun toString() = name
 }

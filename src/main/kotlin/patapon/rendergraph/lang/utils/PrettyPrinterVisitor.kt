@@ -11,7 +11,6 @@ class PrettyPrinterVisitor(
         private val context: BindingContext,
         outString: StringBuilder): RgVisitor()
 {
-
     private val p = Printer(outString)
 
     override fun visitModule(o: RgModule) {
@@ -50,7 +49,7 @@ class PrettyPrinterVisitor(
         p.append("Variable${o.textRange} '${o.name}'")
 
         if (decl != null)  {
-            p.append(" name='${decl.name}' type=${decl.type}")
+            p.append(" name='${decl.name}' type=${decl.type.unwrap()}")
         }
         else { p.append(" <unresolved>") }
 
@@ -67,7 +66,7 @@ class PrettyPrinterVisitor(
 
         p.append("Function${o.textRange} '${o.name}'")
 
-        if (decl != null) { p.append(" name='${decl.name}' returnType=${decl.returnType}") }
+        if (decl != null) { p.append(" name='${decl.name}' signature=${decl.signature}") }
         else { p.append(" <unresolved>") }
 
         p.appendln()
@@ -82,7 +81,7 @@ class PrettyPrinterVisitor(
 
         p.append("Parameter${o.textRange} '${o.name}'")
 
-        if (decl != null) { p.append(" name='${decl.name}' type=${decl.type}") }
+        if (decl != null) { p.append(" name='${decl.name}' type=${decl.type.unwrap()}") }
         else { p.append(" <unresolved>") }
 
         p.appendln()
@@ -156,6 +155,29 @@ class PrettyPrinterVisitor(
         p.appendln()
     }
 
+    override fun visitCallExpression(o: RgCallExpression) {
+        val type = context.expressionTypes[o]
+        p.append("CallExpression${o.textRange}")
+        type?.let { p.append(" type=$it") }
+
+        p.appendln()
+
+        p.withIndent {
+            p.append("+callable=")
+            o.expression.accept(this)
+            o.argumentList?.expressionList.orEmpty().forEach {
+                p.append("+argument=")
+                it.accept(this)
+            }
+        }
+
+        p.appendln()
+    }
+
+    override fun visitExpression(o: RgExpression) {
+        p.appendln(o.toString())
+    }
+
     override fun visitFloatLiteral(o: RgFloatLiteral) {
         val type = context.expressionTypes[o]
         p.append("FloatLiteral${o.textRange} raw='${o.text}' ")
@@ -186,7 +208,6 @@ class PrettyPrinterVisitor(
     override fun visitReturnExpression(o: RgReturnExpression) {
         val type = context.expressionTypes[o]
         p.append("ReturnExpression${o.textRange}")
-
 
         type?.let { p.append(" type=$it") }
 

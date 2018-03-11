@@ -4,6 +4,7 @@ import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.types.DeferredType
+import patapon.rendergraph.lang.types.FunctionType
 import patapon.rendergraph.lang.types.UnitType
 import patapon.rendergraph.lang.types.UnresolvedType
 
@@ -32,11 +33,12 @@ class DeclarationResolver(
         val name = function.name
         val returnTypeAnnotation = function.returnType
 
-        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION)
+        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, false)
 
         // build scope of parameters
+        val parameters = function.parameterList.mapIndexed { i,param -> resolveValueParameter(param, i, decl, resolutionScope) }
         val paramScope = SimpleScope(enclosingScope = resolutionScope) {
-            function.parameterList.forEachIndexed { i,param -> addDeclaration(resolveValueParameter(param, i, decl, resolutionScope)) }
+            parameters.forEach { addDeclaration(it) }
         }
 
         val returnType = if (returnTypeAnnotation != null) {
@@ -58,8 +60,9 @@ class DeclarationResolver(
                 }
             }
 
+        decl.valueParameters = parameters
         decl.bodyResolutionScope = paramScope
-        decl.returnType = returnType
+        decl.signature = FunctionType(returnType, *parameters.map { it.type }.toTypedArray())
         context.functionDeclarations[function] = decl
         return decl
     }

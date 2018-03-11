@@ -152,3 +152,7 @@ fn draw<T: ShaderInterface>(
 
 // Dynamic params:
 // add uniform by name, etc.
+
+
+structs:
+    struct vec4(val x: float, val y: float, val z: float, val w: float)

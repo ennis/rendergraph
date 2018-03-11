@@ -1,9 +1,6 @@
 package patapon.rendergraph.lang.resolve
 
-import patapon.rendergraph.lang.declarations.BindingContext
-import patapon.rendergraph.lang.declarations.Declaration
-import patapon.rendergraph.lang.declarations.TypeDeclaration
-import patapon.rendergraph.lang.declarations.VariableDeclaration
+import patapon.rendergraph.lang.declarations.*
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.diagnostics.Diagnostics
 import patapon.rendergraph.lang.diagnostics.error
@@ -12,6 +9,7 @@ import patapon.rendergraph.lang.psi.RgType
 import patapon.rendergraph.lang.types.Type
 import patapon.rendergraph.lang.types.UnresolvedType
 
+// TODO: a lot of code is redundant here, simplify
 class ReferenceResolver(
         private val context: BindingContext,
         private val d: DiagnosticSink)
@@ -36,6 +34,31 @@ class ReferenceResolver(
                 // Not a type declaration
                 d.report(Diagnostics.EXPECTED_X_FOUND_Y.with(typeRef, "type reference", typeRef.text))
                 UnresolvedType
+            }
+        }
+    }
+
+    fun resolveFunctionReference(ref: RgSimpleReferenceExpression, resolutionScope: Scope): FunctionDeclaration? {
+        val name = ref.identifier.text
+        val lookupResult = resolutionScope.findDeclarations(name)
+
+        return if (lookupResult.isEmpty()) {
+            d.error("Undeclared identifier: $name", ref)
+            null
+        }
+        else if (lookupResult.size > 1) {
+            d.error("Ambiguous reference: $name", ref)
+            null
+        }
+        else {
+            val decl = lookupResult.first()
+            if (decl !is FunctionDeclaration) {
+                d.error("$name does not name a function", ref)
+                null
+            }
+            else {
+                context.simpleReferences[ref] = decl
+                decl
             }
         }
     }

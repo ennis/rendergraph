@@ -194,6 +194,10 @@ component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{'
 }
 
 //====================================================================
+// structs
+
+
+//====================================================================
 // code
 braceBalancedBlock ::=  ('{' braceBalancedBlock '}' | << unpairedToken >>)*
 
@@ -269,9 +273,15 @@ qualification ::= expression '.' identifier
 
 private atomicExpression ::= parensExpression
                    | simpleReferenceExpression
+                   | callExpression
                    | ifExpression
                    | returnExpression
                    | literal
+
+argumentList ::= expression (',' expression)*
+
+callExpression ::= expression '(' argumentList? ')'
+{ extends=expression }
 
 parensExpression ::= '(' expression ')'
 { extends=expression }

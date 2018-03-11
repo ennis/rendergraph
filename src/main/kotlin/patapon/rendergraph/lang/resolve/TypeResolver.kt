@@ -38,7 +38,12 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
     private fun compareTypes(typeA: Type, typeB: Type): Boolean {
         // same instance: this works if both typeA and typeB are primitive types without qualifiers
         // TODO: more complex type checking
-        return (typeA == typeB)
+        val a = typeA.unwrap()
+        val b = typeB.unwrap()
+        return when (a) {
+        is PrimitiveType -> a == b
+        else -> false
+        }
     }
 
     private fun getValueCategory(expr: RgExpression) = when (expr) {
@@ -165,6 +170,46 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
         TODO()
     }
 
+    private fun checkCall(expr: RgCallExpression, resolutionScope: Scope): Type
+    {
+        // resolve function
+        val callable = expr.expression as? RgSimpleReferenceExpression ?: error("Arbitrary callable expressions are not supported yet")
+        val function = referenceResolver.resolveFunctionReference(callable, resolutionScope) ?: return UnresolvedType
+        val signature = function.signature
+        // compute argument types
+        val args = expr.argumentList?.expressionList.orEmpty().toTypedArray()
+        val argTypes = args.map { arg -> checkExpression(arg, resolutionScope) }
+
+        // check signature
+        val numParams = signature.argumentTypes.size
+        // check first numParams
+        for (i in 0 until numParams)
+        {
+            val paramDecl = function.valueParameters[i]
+            val argTy = argTypes.getOrNull(i)
+            val paramTy = signature.argumentTypes[i]
+            if (argTy == null) {
+                // not enough parameters: no value passed for XXX
+                d.error("No value passed for parameter ${paramDecl.name}", expr)
+            }
+            else {
+                // compare types
+                if (!compareTypes(argTy, paramTy)) {
+                    d.error("Type mismatch for parameter ${paramDecl.name} (expected ${paramDecl.type}, got $argTy)", args[i])
+                }
+            }
+        }
+        // extraneous parameters
+        if (argTypes.size > numParams) {
+            d.error("Wrong number of arguments for call to ${function.name}: expected $numParams, got ${argTypes.size}", expr)
+        }
+
+        // force resolve function type if it is not evaluated yet
+        val returnType = signature.returnType.unwrap()
+        context.expressionTypes[expr] = returnType
+        return returnType
+    }
+
     fun checkExpression(expr: RgExpression, resolutionScope: Scope): Type {
         return when (expr) {
             is RgBinaryExpression -> checkBinaryExpression(expr, resolutionScope)
@@ -172,6 +217,7 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
             is RgLiteral -> checkLiteralExpr(expr, resolutionScope)
             is RgQualification -> checkQualification(expr, resolutionScope)
             is RgSimpleReferenceExpression -> checkSimpleReference(expr, resolutionScope)
+            is RgCallExpression -> checkCall(expr, resolutionScope)
             else -> TODO()
         }
     }

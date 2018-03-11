@@ -27,7 +27,7 @@ class BodyResolver(val typeResolver: TypeResolver, val context: BindingContext, 
             }
 
             override fun visitExpression(o: RgExpression) {
-                typeResolver.checkExpression(o, decl.resolutionScope)
+                typeResolver.getExpressionType(o, decl.resolutionScope)
             }
         }
         o.functionBody?.acceptChildren(functionBodyResolver)
@@ -37,7 +37,7 @@ class BodyResolver(val typeResolver: TypeResolver, val context: BindingContext, 
         val decl = context.variableDeclarations[o] ?: error(DECLARATION_NOT_BUILT)
         val initializer = o.initializer
         if (initializer != null) {
-            typeResolver.checkExpression(initializer, decl.initializerResolutionScope)
+            typeResolver.getExpressionType(initializer, decl.initializerResolutionScope)
         }
     }
 }
