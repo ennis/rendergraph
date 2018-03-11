@@ -218,6 +218,7 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
             is RgQualification -> checkQualification(expr, resolutionScope)
             is RgSimpleReferenceExpression -> checkSimpleReference(expr, resolutionScope)
             is RgCallExpression -> checkCall(expr, resolutionScope)
+            is RgParensExpression -> checkExpression(expr.expression!!, resolutionScope)
             else -> TODO()
         }
     }
