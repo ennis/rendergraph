@@ -95,7 +95,8 @@ private semi ::= ';'
 //====================================================================
 // MODULE & IMPORTS
 //private moduleRecover ::= !(ImportDirective | item)
-module ::= (MODULE_KW path semi)? imports moduleContents {
+module ::= (MODULE_KW path semi)? imports moduleContents
+{
     pin=1
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgModuleImplMixin"
@@ -121,7 +122,8 @@ private item ::= (variable
 path ::= qualifiedPath
        | pathRoot
 
-qualifiedPath ::= path '.' identifier {
+qualifiedPath ::= path '.' identifier
+{
     extends=path
     methods=[ left="path" right="identifier" ]
     rightAssociative=true
@@ -132,12 +134,15 @@ pathRoot ::= identifier
 
 
 //====================================================================
-type ::= path
+type ::= path {
+    mixin = "patapon.rendergraph.lang.psi.impl.RgTypeImplMixin"
+}
 
 //====================================================================
 qualifier ::= const | UNIFORM_KW
 
-variable ::= attributeList qualifier? val identifier (':' type)? ('=' expression)? semi {
+variable ::= attributeList qualifier? val identifier (':' type)? ('=' expression)? semi
+{
     pin=3
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
@@ -161,7 +166,8 @@ private arglistRecover ::= !(')' | ',')
 
 parameterQualifier ::= 'in' | 'out' | 'inout'
 
-parameter ::= attributeList parameterQualifier? identifier ':' type {
+parameter ::= attributeList parameterQualifier? identifier ':' type
+{
     pin=3
     recoverWhile=arglistRecover
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
@@ -171,7 +177,8 @@ parameter ::= attributeList parameterQualifier? identifier ':' type {
 
 private parameterList ::= parameter (',' parameter)*
 
-function ::= attributeList fun identifier '(' parameterList? ')' (':' type)? (functionBody | semi) {
+function ::= attributeList fun identifier '(' parameterList? ')' (':' type)? (functionBody | semi)
+{
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
     methods = [ returnType="type" nameIdentifier="identifier" ]
@@ -180,14 +187,16 @@ function ::= attributeList fun identifier '(' parameterList? ')' (':' type)? (fu
 //====================================================================
 private memberRecover ::= !('}' | const | '@' | identifier | fun | val | UNIFORM_KW )
 
-private memberDeclaration ::= !'}' ( variable | function ) {
+private memberDeclaration ::= !'}' ( variable | function )
+{
     pin=1
     recoverWhile=memberRecover
 }
 
 baseComponentList ::= path (',' path)*
 
-component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{' memberDeclaration* '}' {
+component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{' memberDeclaration* '}'
+{
     implements = [ "patapon.rendergraph.lang.psi.RgNamedDeclaration" ]
     mixin = "patapon.rendergraph.lang.psi.impl.RgNamedElementImpl"
     methods = [ nameIdentifier="identifier" ]
@@ -201,7 +210,8 @@ component ::= attributeList COMPONENT_KW identifier (':' baseComponentList)? '{'
 // code
 braceBalancedBlock ::=  ('{' braceBalancedBlock '}' | << unpairedToken >>)*
 
-functionBody ::= block | '=' expression semi {
+functionBody ::= block | '=' expression semi
+{
     methods = [ blockBody="block"; expressionBody="expression" ]
 }
 
@@ -287,7 +297,10 @@ parensExpression ::= '(' expression ')'
 { extends=expression }
 
 simpleReferenceExpression ::= identifier
-{ extends=expression }
+{
+    mixin = "patapon.rendergraph.lang.psi.impl.RgSimpleReferenceExpressionImplMixin"
+    extends=expression
+}
 
 ifExpression ::= if "(" expression ")" expression (else expression)?
 { extends=expression methods=[condition="/expression[0]" thenBranch="/expression[1]" elseBranch="/expression[2]"] }

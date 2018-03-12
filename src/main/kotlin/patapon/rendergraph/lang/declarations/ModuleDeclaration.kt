@@ -1,5 +1,6 @@
 package patapon.rendergraph.lang.declarations
 
+import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.*
 import patapon.rendergraph.lang.resolve.*
@@ -12,8 +13,8 @@ interface ModuleDeclaration: DeclarationWithResolutionScope
 
 class ModuleDeclarationImpl(
         override val name: String,
+        override val sourceElement: RgModule,
         val declarationResolver: DeclarationResolver,
-        module: RgModule,
         d: DiagnosticSink
     ): ModuleDeclaration
 {
@@ -23,7 +24,7 @@ class ModuleDeclarationImpl(
     // TODO chaining the primitive scope here is a hack
     val _resolutionScope = Lazy { ChainedScope(members, PrimitiveScope) }
 
-    override val members = object : LazyMemberScope(this, module.moduleContents!!, d) {
+    override val members = object : LazyMemberScope(this, sourceElement.moduleContents!!, d) {
         override fun resolveDeclaration(o: RgDeclaration): Declaration? {
             return when (o) {
                 is RgFunction -> declarationResolver.resolveFunctionDeclaration(o, this@ModuleDeclarationImpl, resolutionScope)

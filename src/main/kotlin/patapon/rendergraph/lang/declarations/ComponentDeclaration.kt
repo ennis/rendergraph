@@ -1,6 +1,7 @@
 package patapon.rendergraph.lang.declarations
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.diagnostics.DiagnosticSink
 import patapon.rendergraph.lang.psi.RgComponent
 import patapon.rendergraph.lang.psi.RgDeclaration
@@ -43,8 +44,8 @@ interface ComponentDeclaration: DeclarationWithResolutionScope
 class ComponentDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
         override val name: String,
+        override val sourceElement: RgComponent,
         declarationResolver: DeclarationResolver,
-        component: RgComponent,
         d: DiagnosticSink
     ): ComponentDeclaration
 {
@@ -57,7 +58,7 @@ class ComponentDeclarationImpl(
 
     override val resolutionScope get() = ChainedScope(inheritanceScope, owningDeclaration.resolutionScope)
 
-    override val members = object : LazyMemberScope(this, component, d) {
+    override val members = object : LazyMemberScope(this, sourceElement, d) {
         override fun resolveDeclaration(o: RgDeclaration): Declaration? {
             return when (o) {
                 is RgFunction -> declarationResolver.resolveFunctionDeclaration(o, this@ComponentDeclarationImpl, resolutionScope)

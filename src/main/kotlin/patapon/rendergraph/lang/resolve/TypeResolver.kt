@@ -251,7 +251,7 @@ class TypeResolver(private val context: BindingContext, private val referenceRes
             stmt.expression?.let { expr -> checkExpression(expr, curScope) }
             stmt.variable?.let { variable ->
                 val varType = checkVariableDeclaration(variable, curScope, curScope)
-                val varDecl = VariableDeclarationImpl(owningDeclaration, variable.name!!, varType, curScope)
+                val varDecl = VariableDeclarationImpl(owningDeclaration, variable, variable.name!!, varType, curScope)
                 // introduce new binding
                 curScope = BindingScope(curScope, varDecl)
             }

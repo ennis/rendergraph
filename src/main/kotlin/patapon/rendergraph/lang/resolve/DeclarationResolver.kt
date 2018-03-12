@@ -22,7 +22,7 @@ class DeclarationResolver(
 
     fun resolveModuleDeclaration(mod: RgModule): ModuleDeclaration {
         return context.moduleDeclarations.getOrPut(mod) {
-            ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, this, mod, d)
+            ModuleDeclarationImpl(mod.name ?: UNNAMED_MODULE, mod,this, d)
         }
     }
 
@@ -33,7 +33,7 @@ class DeclarationResolver(
         val name = function.name
         val returnTypeAnnotation = function.returnType
 
-        val decl = FunctionDeclarationImpl(owningDeclaration, name ?: UNNAMED_FUNCTION, false)
+        val decl = FunctionDeclarationImpl(owningDeclaration, function,name ?: UNNAMED_FUNCTION, false)
 
         // build scope of parameters
         val parameters = function.parameterList.mapIndexed { i,param -> resolveValueParameter(param, i, decl, resolutionScope) }
@@ -85,7 +85,7 @@ class DeclarationResolver(
     }
 
     private fun resolveValueParameter(param: RgParameter, index: Int, owningDeclaration: FunctionDeclaration, resolutionScope: Scope): ValueParameter {
-        val decl = ValueParameter(owningDeclaration, param.name
+        val decl = ValueParameter(owningDeclaration, param, param.name
                 ?: UNNAMED_VALUE_PARAMETER, referenceResolver.resolveTypeReference(param.type!!, resolutionScope), index)
         context.valueParameters[param] = decl
         return decl
@@ -106,13 +106,13 @@ class DeclarationResolver(
             }
         }
 
-        val decl = VariableDeclarationImpl(owningDeclaration, variable.name ?: UNNAMED_CONSTANT, type, owningDeclaration.resolutionScope)
+        val decl = VariableDeclarationImpl(owningDeclaration, variable,variable.name ?: UNNAMED_CONSTANT, type, owningDeclaration.resolutionScope)
         context.variableDeclarations[variable] = decl
         return decl
     }
 
     fun resolveComponentDeclaration(component: RgComponent, owningDeclaration: DeclarationWithResolutionScope): ComponentDeclaration {
-        val decl = ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, this, component, d)
+        val decl = ComponentDeclarationImpl(owningDeclaration, component.name ?: UNNAMED_COMPONENT, component,this, d)
         context.componentDeclarations[component] = decl
         return decl
     }

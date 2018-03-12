@@ -1,5 +1,6 @@
 package patapon.rendergraph.lang.declarations
 
+import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.psi.RgVariable
 import patapon.rendergraph.lang.resolve.Scope
 import patapon.rendergraph.lang.types.Type
@@ -14,6 +15,7 @@ interface VariableDeclaration : Declaration {
 
 class VariableDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
+        override val sourceElement: RgVariable,
         override val name: String,
         override val type: Type,
         override val initializerResolutionScope: Scope) : VariableDeclaration

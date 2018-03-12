@@ -19,7 +19,8 @@ abstract class RgModuleImplMixin(node: ASTNode): RgNamedElementImpl(node), RgMod
             }
         }
         else {
-            throw IllegalStateException("no path for module")
+            //throw IllegalStateException("no path for module")
+            return null
         }
     }
 

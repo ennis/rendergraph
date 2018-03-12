@@ -1,5 +1,6 @@
 package patapon.rendergraph.lang.declarations
 
+import com.intellij.psi.PsiElement
 import patapon.rendergraph.lang.psi.RgFunction
 import patapon.rendergraph.lang.resolve.DeclarationResolver
 import patapon.rendergraph.lang.resolve.TypeResolver
@@ -19,6 +20,7 @@ interface FunctionDeclaration : DeclarationWithResolutionScope {
 
 class FunctionDeclarationImpl(
         override val owningDeclaration: DeclarationWithResolutionScope,
+        override val sourceElement: RgFunction,
         override val name: String,
         override val isOperator: Boolean) : FunctionDeclaration
 {
