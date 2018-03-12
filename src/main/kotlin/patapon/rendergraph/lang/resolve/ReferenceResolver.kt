@@ -15,7 +15,7 @@ class ReferenceResolver(
         private val d: DiagnosticSink)
 {
     fun resolveTypeReference(typeRef: RgType, resolutionScope: Scope): Type {
-        val lookupResult = resolvePath(typeRef.path, resolutionScope)
+        val lookupResult = resolvePath(typeRef.referenceNameElement, resolutionScope)
         if (lookupResult.isEmpty()) {
             d.report(Diagnostics.UNDECLARED_IDENTIFIER.with(typeRef, typeRef.text))
             return UnresolvedType
@@ -39,7 +39,7 @@ class ReferenceResolver(
     }
 
     fun resolveFunctionReference(ref: RgSimpleReferenceExpression, resolutionScope: Scope): FunctionDeclaration? {
-        val name = ref.identifier.text
+        val name = ref.referenceNameElement.text
         val lookupResult = resolutionScope.findDeclarations(name)
 
         return if (lookupResult.isEmpty()) {
@@ -64,7 +64,7 @@ class ReferenceResolver(
     }
 
     fun resolveSimpleVariableReference(ref: RgSimpleReferenceExpression, resolutionScope: Scope): VariableDeclaration? {
-        val name = ref.identifier.text
+        val name = ref.referenceNameElement.text
         val lookupResult = resolutionScope.findDeclarations(name)
 
         return if (lookupResult.isEmpty()) {

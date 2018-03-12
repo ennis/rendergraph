@@ -102,7 +102,7 @@ class GLSLGenerator(val context: BindingContext, val p: Printer): RgVisitor()
             is RgBinaryExpression -> genBinaryExpr(expr)
             is RgParensExpression -> { p.append("("); genExpr(expr.expression!!); p.append(")") }
             is RgReturnExpression -> genReturn(expr.expression!!)
-            is RgSimpleReferenceExpression -> genIdentifier(expr.identifier)
+            is RgSimpleReferenceExpression -> genIdentifier(expr.referenceNameElement)
         }
     }
 

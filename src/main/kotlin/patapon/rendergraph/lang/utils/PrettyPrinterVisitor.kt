@@ -148,10 +148,10 @@ class PrettyPrinterVisitor(
     override fun visitSimpleReferenceExpression(o: RgSimpleReferenceExpression) {
         val type = context.expressionTypes[o]
         val ref = context.simpleReferences[o]
-        p.append("SimpleReferenceExpression${o.textRange} ident='${o.identifier.text}'")
+        p.append("SimpleReferenceExpression${o.textRange} ref='${o.referenceNameElement.text}'")
 
         type?.let { p.append(" type=$it") }
-        ref?.let { p.append(" ref=${it.getFullyQualifiedName()}") }
+        ref?.let { p.append(" target=${it.getFullyQualifiedName()}") }
 
         p.appendln()
     }
@@ -221,8 +221,7 @@ class PrettyPrinterVisitor(
 
     override fun visitQualification(o: RgQualification) {
         val type = context.expressionTypes[o]
-        p.append("QualificationExpression${o.textRange} ident='${o.identifier.text}'")
-
+        p.append("QualificationExpression${o.textRange} ref='${o.identifier.text}'")
 
         type?.let { p.append(" type=$it") }
 

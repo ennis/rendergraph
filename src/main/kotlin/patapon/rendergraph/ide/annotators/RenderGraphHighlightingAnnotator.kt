@@ -31,7 +31,7 @@ class RenderGraphHighlightingAnnotator: Annotator
 
     private fun highlightTypeElement(element: RgType): TextAttributesKey? {
         // Recognize primitive types
-        return when (element.path.text) {
+        return when (element.referenceNameElement.text) {
             "float" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey
             "int" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey
             "double" -> RenderGraphColors.PRIMITIVE_TYPE.textAttributesKey

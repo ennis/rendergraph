@@ -6,7 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiReference
 import patapon.rendergraph.lang.Compiler
 import patapon.rendergraph.lang.psi.RgSimpleReferenceExpression
-import patapon.rendergraph.lang.resolve.RgSimpleReference
+import patapon.rendergraph.ide.references.RgSimpleReference
 
 abstract class RgSimpleReferenceExpressionImplMixin(node: ASTNode): ASTWrapperPsiElement(node), RgSimpleReferenceExpression {
     companion object {

@@ -135,7 +135,9 @@ pathRoot ::= identifier
 
 //====================================================================
 type ::= path {
+    implements = ["patapon.rendergraph.lang.psi.RgReferenceElement"]
     mixin = "patapon.rendergraph.lang.psi.impl.RgTypeImplMixin"
+    methods = [ referenceNameElement="path" ]
 }
 
 //====================================================================
@@ -299,7 +301,9 @@ parensExpression ::= '(' expression ')'
 simpleReferenceExpression ::= identifier
 {
     mixin = "patapon.rendergraph.lang.psi.impl.RgSimpleReferenceExpressionImplMixin"
+    implements = ["patapon.rendergraph.lang.psi.RgReferenceElement"]
     extends=expression
+    methods = [ referenceNameElement="identifier" ]
 }
 
 ifExpression ::= if "(" expression ")" expression (else expression)?
